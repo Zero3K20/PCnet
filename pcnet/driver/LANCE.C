@@ -2484,7 +2484,8 @@ Return Value:
 
 {
 
-	USHORT Time, Data;
+	USHORT Time;
+	ULONG Data;
 	UINT Timeout = START_STOP_TIMEOUT;
 
 #ifdef DBG
@@ -3516,8 +3517,8 @@ LanceGetActiveMediaInfo(
 	ULONG	MyAbility;
 	ULONG	LinkPartnerAbility;
 	USHORT	BitMask = 0x8000;
-	USHORT  Bcr33Value;
-	USHORT  NewBcr33Value;
+	ULONG   Bcr33Value;
+	ULONG   NewBcr33Value;
 
 	if (ExtPhyLinkStatus(Adapter->MappedIoBaseAddress))
 	{	/* Read speed and duplex mode from ext phy */
@@ -3643,9 +3644,9 @@ ExtPhyLinkStatus(
 	IN ULONG IoBaseAddress
 )
 {
-	USHORT  TempValue;
-	USHORT  Bcr33Value;
-	USHORT  NewBcr33Value;
+	ULONG   TempValue;
+	ULONG   Bcr33Value;
+	ULONG   NewBcr33Value;
 
 	/* Check to see if an external PHY is indicating its presence via       */
 	/* the MDIO pin value. Us regular software folk know the MDIO pin       */
