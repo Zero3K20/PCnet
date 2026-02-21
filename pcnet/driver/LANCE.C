@@ -91,7 +91,6 @@ $Log:   V:\network\pcnet\mini3&4\src\lance.c_v  $
 //#define DBG 1
 
 #include <ndis.h>
-#include <efilter.h>
 #include <lancehrd.h>
 #include <lancesft.h>
 

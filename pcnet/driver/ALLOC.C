@@ -31,7 +31,6 @@ Revision History:
 --*/
 
 #include <ndis.h>
-#include <efilter.h>
 #include <lancehrd.h>
 #include <lancesft.h>
 
