@@ -324,7 +324,7 @@ Return Value:
 #endif
 
             case OID_GEN_LINK_SPEED:
-					if (Adapter->DeviceType == PCNET_PCI3)
+					if (Adapter->DeviceType != LANCE)
 						LanceGetActiveMediaInfo (Adapter);
 					GenericUlong = Adapter->LineSpeed * 10000; // in 100bps units
                break;
