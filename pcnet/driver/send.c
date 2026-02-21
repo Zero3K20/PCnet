@@ -162,8 +162,6 @@ Return Value:
 	switch (Adapter->DeviceType)
 	{
 		case LANCE:
-		case PCNET_ISA:
-		case PCNET_ISA_PLUS:
 		case PCNET_PCI2_A4:
 		case PCNET_PCI1:
 			/* If the chip not running, restart it */
@@ -1164,8 +1162,6 @@ Return Value:
 	switch (Adapter->DeviceType)
 	{
 		case LANCE:
-		case PCNET_ISA:
-		case PCNET_ISA_PLUS:
 		case PCNET_PCI2_A4:
 		case PCNET_PCI1:
 			/* If the chip not running, restart it */

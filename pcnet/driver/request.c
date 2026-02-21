@@ -170,7 +170,7 @@ Return Value:
    UCHAR VendorId[4];
    NDIS_OID MaskOid;
 
-   static UCHAR VendorDescription[] = "IBM 10/100 Mbps Ethernet TX MCA Adapter";
+   static UCHAR VendorDescription[] = "AMD PCnet Ethernet Adapter";
    static NDIS_OID LanceGlobalSupportedOids[] = {
                            OID_GEN_SUPPORTED_LIST,
                            OID_GEN_HARDWARE_STATUS,
@@ -885,7 +885,6 @@ Return Value:
    //
    // Local Pointer to the Initialization Block.
    //
-   PLANCE_INIT_BLOCK InitializationBlock;
    PLANCE_INIT_BLOCK_HI InitializationBlockHi;
 
    #if DBG
@@ -896,14 +895,7 @@ Return Value:
       }
    #endif
 
-   if((Adapter->BoardFound == PCI_DEV) ||
-     (Adapter->BoardFound == MCA_DEV)) {
-
-      InitializationBlockHi = (PLANCE_INIT_BLOCK_HI)Adapter->InitializationBlock;
-   }
-   else {
-      InitializationBlock = (PLANCE_INIT_BLOCK)Adapter->InitializationBlock;
-   }
+   InitializationBlockHi = (PLANCE_INIT_BLOCK_HI)Adapter->InitializationBlock;
 
    if (Adapter->CurrentPacketFilter & NDIS_PACKET_TYPE_PROMISCUOUS) {
 
@@ -912,38 +904,17 @@ Return Value:
             DbgPrint("ChangeClass: Go promiscious.\n");
       #endif
 
-      if((Adapter->BoardFound == PCI_DEV) ||
-      (Adapter->BoardFound == MCA_DEV)) {
-
-         InitializationBlockHi->Mode = LANCE_PROMISCIOUS_MODE;
-         if(Adapter->tp)
-            InitializationBlockHi->Mode |= 0x1080;
-      }
-      else
-      {
-         InitializationBlock->Mode = LANCE_PROMISCIOUS_MODE;
-         if(Adapter->tp)
-            InitializationBlock->Mode |= 0x1080;
-      }
+      InitializationBlockHi->Mode = LANCE_PROMISCIOUS_MODE;
+      if(Adapter->tp)
+         InitializationBlockHi->Mode |= 0x1080;
 
    } else {
 
       USHORT i;
 
-      if((Adapter->BoardFound == PCI_DEV) ||
-      (Adapter->BoardFound == MCA_DEV)) {
-
-         InitializationBlockHi->Mode = LANCE_NORMAL_MODE;
-         if(Adapter->tp)
-            InitializationBlockHi->Mode |= 0x1080;
-
-      }
-      else
-      {
-         InitializationBlock->Mode = LANCE_NORMAL_MODE;
-         if(Adapter->tp)
-            InitializationBlock->Mode |= 0x1080;
-      }
+      InitializationBlockHi->Mode = LANCE_NORMAL_MODE;
+      if(Adapter->tp)
+         InitializationBlockHi->Mode |= 0x1080;
 
       if (Adapter->CurrentPacketFilter & NDIS_PACKET_TYPE_ALL_MULTICAST) {
 
@@ -952,17 +923,8 @@ Return Value:
                DbgPrint("ChangeClass: Receive all multicast.\n");
          #endif
 
-         if((Adapter->BoardFound == PCI_DEV) ||
-         (Adapter->BoardFound == MCA_DEV)) {
-
-            for (i=0; i<8; i++)
-               InitializationBlockHi->LogicalAddressFilter[i] = 0xFF;
-         }
-         else
-         {
-            for (i=0; i<8; i++)
-               InitializationBlock->LogicalAddressFilter[i] = 0xFF;
-         }
+         for (i=0; i<8; i++)
+            InitializationBlockHi->LogicalAddressFilter[i] = 0xFF;
 
       } else if (Adapter->CurrentPacketFilter & NDIS_PACKET_TYPE_MULTICAST) {
 
@@ -1016,7 +978,6 @@ Return Value:
    //
    // Local Pointer to the Initialization Block.
    //
-   PLANCE_INIT_BLOCK InitializationBlock;
    PLANCE_INIT_BLOCK_HI InitializationBlockHi;
 
    #if DBG
@@ -1024,18 +985,9 @@ Return Value:
          DbgPrint("==>LanceChangeAddress\n");
    #endif
 
-   if((Adapter->BoardFound == PCI_DEV) ||
-   (Adapter->BoardFound == MCA_DEV)) {
-
-      InitializationBlockHi = (PLANCE_INIT_BLOCK_HI)Adapter->InitializationBlock;
-		for (i=0; i<8; i++)
+   InitializationBlockHi = (PLANCE_INIT_BLOCK_HI)Adapter->InitializationBlock;
+	for (i=0; i<8; i++)
 	      InitializationBlockHi->LogicalAddressFilter[i] = 0;
-   }
-   else {
-      InitializationBlock = (PLANCE_INIT_BLOCK)Adapter->InitializationBlock;
-		for (i=0; i<8; i++)
-	      InitializationBlock->LogicalAddressFilter[i] = 0;
-   }
 
    //
    // Loop through, copying the addresses into the CAM.
@@ -1065,17 +1017,8 @@ Return Value:
       //
       FilterByte = HashCode >> 3;
 
-      if((Adapter->BoardFound == PCI_DEV) ||
-      (Adapter->BoardFound == MCA_DEV)) {
-
-         InitializationBlockHi->LogicalAddressFilter[FilterByte] |=
-                  (1 << (HashCode & 0x07));
-      }
-      else
-      {
-         InitializationBlock->LogicalAddressFilter[FilterByte] |=
-                  (1 << (HashCode & 0x07));
-      }
+      InitializationBlockHi->LogicalAddressFilter[FilterByte] |=
+               (1 << (HashCode & 0x07));
 
    }
 
@@ -1374,28 +1317,7 @@ Return Value:
 			break;
 
 		case DMI_OPCODE_GET_BOARD_FOUND:
-			switch (Adapter->BoardFound)
-			{
-				case PCI_DEV:
-					ReqBlock->Value = DMI_PCI_BOARD;
-					break;
-
-				case PLUG_PLAY_DEV:
-					ReqBlock->Value = DMI_PLUG_PLAY_BOARD;
-					break;
-
-				case LOCAL_DEV:
-					ReqBlock->Value = DMI_LOCAL_BOARD;
-					break;				
-					
-				case MCA_DEV:
-					ReqBlock->Value = DMI_PCI_BOARD; //MCA board is a bridge to the PCI chip
-					break;       
-					
-				default:
-					ReqBlock->Value = DMI_NO_BOARD;
-					break;
-			}
+			ReqBlock->Value = DMI_PCI_BOARD;
 			break;
 
 		case DMI_OPCODE_GET_IO_BASE_ADDR:

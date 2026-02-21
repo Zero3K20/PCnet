@@ -257,38 +257,21 @@ typedef enum DmiSpecific
 #define FDUP_OFF		0x0000		/* Full Duplex Mode turned off			*/
 #define FDUP_AUI		0x0003		/* AUI Mode turned on					*/
 #define FDUP_10BASE_T	0x0001		/* 10Base-T Mode turned on				*/
-#define PART_NO_MASK	0x0003		/* PCNetISA ID MASK						*/
 #define LINESPEED_DEFAULT 10		/* PCnet default line speed			*/
-
-/* Device bus type	*/
-
-#define PCI_DEV			0x01		/* PCI bus flag					*/
-#define PLUG_PLAY_DEV	0x02		/* PnP ISA bus flag				*/
-#define LOCAL_DEV		0x03		/* Local bus flag				*/
-#define MCA_DEV			0x05        /* MCA bus flag					*/
 
 /* MapRegisters */
 #define DEFAULT_MAP_REG_COUNT 	2
 
-/* Device type on ISA bus	*/
+/* Device type	*/
 #define LANCE				0x00	/* LANCE present FLAG				*/
-#define PCNET_ISA			0x01	/* PCNetISA flag					*/
-#define PCNET_ISA_PLUS		0x02	/* PCNetISA + present flag			*/
-#define PCNET_ISA_PLUS_PLUS	0x03	/* PCNetISA ++ present flag			*/
+#define PCNET_ISA_PLUS_PLUS	0x03	/* PCNetISA ++ present flag (legacy, unused)	*/
 #define PCNET_PCI2_A4		0x04	/* PCNetPCI 2 rev A4 present flag	*/
 #define PCNET_PCI2_B2		0x05	/* PCNetPCI 2 rev B2 present flag	*/
 #define PCNET_PCI3			0x06	/* PCNetPCI 3 present flag			*/
 #define PCNET_PCI1			0x07	/* PCNetPCI 1 (Am79C970A PCnet-PCI II)	*/
 
 
-/* Chip ID in CSR 9 :	*/
-/*	LANSHARK - PCnet-ISA+ (Am79C961)	*/
-/*	HILANCE	- PCnet-VL	(Am79C965)	*/
-#define LANSHARK			0x01		/* LANSHARK dev ID	(offset 09)	*/	
-#define HILANCE				0x10		/* HILANCE dev ID (offset 09)	*/	
-#define PCNET_PCI_ID		0x20001022	/* vendor/device id -- Presidio	*/	
-#define ISA_IRQ_DEF			3			/* default IRQ for ISA			*/
-#define ISA_DMA_DEF			5			/* default DMA for ISA			*/
+
 
 #define LANCE_INIT_OK			0	/* LanceHardwareDetails return codes */
 #define LANCE_INIT_WARNING_8	8
@@ -526,9 +509,7 @@ typedef struct _LANCE_ADAPTER
 	/* Bus type, i.e., ISA, PCI */
 	USHORT BusType;
 
-	BOOLEAN IsPciDirect;    /* TRUE when PCnet registers are directly at BAR0 (no ASIC bridge) */
-
-	/* Device Type, i.e., PCNET-ISA or LANCE */
+	/* Device Type, i.e., PCnet-PCI variant */
 	UCHAR DeviceType;
 	UCHAR MIIPhyDetected;
 
@@ -562,7 +543,6 @@ typedef struct _LANCE_ADAPTER
 	USHORT BusTimer;
 
 	/* Keywords for the adapter. */
-	ULONG BusScan;
 	ULONG tp;
 	ULONG MpMode;
 	ULONG RedundantMode;
@@ -577,9 +557,6 @@ typedef struct _LANCE_ADAPTER
 
 	/* Line Speed Value. */
 	USHORT LineSpeed;
-
-	/* Board Type found. ISA+, ISA, LOCAL, PCI */
-	UCHAR BoardFound;
 
 	/* Memory allocated */
 	ULONG AllocatedNonCachedMemorySize;
@@ -1027,36 +1004,22 @@ LanceGetActiveMediaInfo (
 
 #endif 
 
-/* I/O dispatch helpers — select ASIC bridge or direct PCI access.
- * Defined here as static __inline so LANCE.C, INTERRUP.C, SEND.C and REQUEST.C
- * each get their own inlined copy without a shared link-time symbol. */
+/* I/O dispatch helpers — always use direct PCI access (no ASIC bridge). */
 static __inline VOID LanceReadCsr(PLANCE_ADAPTER Adapter, ULONG Reg, PULONG Value)
 {
-    if (Adapter->IsPciDirect)
-        LancePciReadCsr(Adapter->MappedIoBaseAddress, Reg, Value);
-    else
-        LANCE_READ_CSR(Adapter->MappedIoBaseAddress, Reg, Value);
+    LancePciReadCsr(Adapter->MappedIoBaseAddress, Reg, Value);
 }
 static __inline VOID LanceWriteCsr(PLANCE_ADAPTER Adapter, ULONG Reg, ULONG Value)
 {
-    if (Adapter->IsPciDirect)
-        LancePciWriteCsr(Adapter->MappedIoBaseAddress, Reg, Value);
-    else
-        LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, Reg, Value);
+    LancePciWriteCsr(Adapter->MappedIoBaseAddress, Reg, Value);
 }
 static __inline VOID LanceReadBcr(PLANCE_ADAPTER Adapter, ULONG Reg, PULONG Value)
 {
-    if (Adapter->IsPciDirect)
-        LancePciReadBcr(Adapter->MappedIoBaseAddress, Reg, Value);
-    else
-        LANCE_READ_BCR(Adapter->MappedIoBaseAddress, Reg, Value);
+    LancePciReadBcr(Adapter->MappedIoBaseAddress, Reg, Value);
 }
 static __inline VOID LanceWriteBcr(PLANCE_ADAPTER Adapter, ULONG Reg, ULONG Value)
 {
-    if (Adapter->IsPciDirect)
-        LancePciWriteBcr(Adapter->MappedIoBaseAddress, Reg, Value);
-    else
-        LANCE_WRITE_BCR(Adapter->MappedIoBaseAddress, Reg, Value);
+    LancePciWriteBcr(Adapter->MappedIoBaseAddress, Reg, Value);
 }
 
 #endif /* #ifndef DMIDLL */

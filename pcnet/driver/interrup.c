@@ -102,7 +102,6 @@ Return Value:
 --*/
 
 {
-	ULONG SavedRAPValue;
 
 	#if DBG
 		if (LanceDbg)
@@ -110,8 +109,6 @@ Return Value:
 	#endif
 	
 	/* Enable device interrupts	*/
-	if (!((PLANCE_ADAPTER)Adapter)->IsPciDirect)
-		ASIC_ENABLE_INTERRUPTS(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress);
 	LanceWriteCsr((PLANCE_ADAPTER)Adapter, LANCE_CSR0, LANCE_CSR0_IENA);
 	
 	#if DBG
@@ -143,7 +140,6 @@ Return Value:
 --*/
 
 {
-	ULONG SavedRAPValue;
 
 	#if DBG
 		if (LanceDbg)
@@ -156,8 +152,6 @@ Return Value:
     //NdisRawReadPortUlong((((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + ASIC_IO_DATA_REGISTER), &SavedRAPValue); 
 
 	/* Disable device interrupts.	Only IENA is affected by writing 0	*/
-	if (!((PLANCE_ADAPTER)Adapter)->IsPciDirect)
-		ASIC_DISABLE_INTERRUPTS(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress);
 	LanceWriteCsr((PLANCE_ADAPTER)Adapter, LANCE_CSR0, 0);
 
 	/* Restore RAP value */	
@@ -207,8 +201,6 @@ Return Value:
 
 	PLANCE_ADAPTER	Adapter = Context;
 	ULONG			Csr0Value;
-	ULONG			SavedRAPValue;
-	USHORT ASICData18, ASICData02;
 
 	#if DBG
 		if (LanceDbg)
@@ -216,11 +208,6 @@ Return Value:
 	#endif
 
 	LOG(IN_ISR)
-
-	/* Read ASIC interrupt flags?
-       ASIC is not documented. */
-	NdisRawReadPortUshort((Adapter->MappedIoBaseAddress + 0x18), &ASICData18);
-	NdisRawReadPortUshort((Adapter->MappedIoBaseAddress + 0x02), &ASICData02);
 
 	/* Set default return value	*/
 	*InterruptRecognized = FALSE;
@@ -279,23 +266,8 @@ Return Value:
 		#endif
 	}
 
-    /* Acknowledge ASIC interrupt flags and re-prepare?
-	   ASIC is not documented. */
-	if (!Adapter->IsPciDirect)
-	{
-		NdisRawWritePortUshort((Adapter->MappedIoBaseAddress + 0x18), ASICData18);
-		NdisRawWritePortUshort((Adapter->MappedIoBaseAddress + 0x02), ASICData02);
-		NdisRawWritePortUshort((Adapter->MappedIoBaseAddress + 0x1A), 0x0FFF);
-	}
-
 	LOG(OUT_ISR)
 
-	/* Restore RAP value */
-	//NdisRawWritePortUshort(Adapter->MappedIoBaseAddress + LANCE_DWIO_RAP_PORT, SavedRAPValue);
-	//***Not use in Phoenix code
-	//NdisRawWritePortUlong((Adapter->MappedIoBaseAddress + ASIC_IO_ADDRESS_REGISTER), (Adapter->MappedIoBaseAddress + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); 	
-    //NdisRawWritePortUlong((Adapter->MappedIoBaseAddress + ASIC_IO_DATA_REGISTER), SavedRAPValue); 		
-   
 	#if DBG
 		if (LanceDbg)
 		DbgPrint("<==LanceISR\n");
@@ -453,8 +425,7 @@ Return Value:
 	}
 
 	if ((Csr0Value & LANCE_CSR0_MISS) &&
-		(Adapter->DeviceType == PCNET_ISA) &&
-		(Adapter->DeviceRevisionId != PCNET_ISA_B2_REV_ID))
+		(Adapter->DeviceType == LANCE))
 	{
 		#if DBG
 		if(LanceDbg)
@@ -900,8 +871,6 @@ SkipIndication:
 			break;
 
 		case LANCE:
-		case PCNET_ISA:
-		case PCNET_ISA_PLUS:
 		case PCNET_PCI1:
 		case PCNET_PCI2_A4:
 

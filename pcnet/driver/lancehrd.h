@@ -242,41 +242,7 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 //#define LANCE_RESET_PORT 0x14
 //#define LANCE_IDP_PORT   0x16
 
-/* Device ID of IBM MCA adapter */
-#define SR_ADAPTER_ID  0x8F62
 
-/* Offsets from base I/O address. */
-#define LANCE_DWIO_RDP_PORT    0x10
-#define LANCE_DWIO_RAP_PORT    0x14
-#define LANCE_DWIO_RESET_PORT  0x18
-#define LANCE_DWIO_IDP_PORT    0x1C
-
-// The ASIC puts the PCnet at an offset of  0x1000 above the ASICs slave IO space 
-#define ASIC_IO_OFFSET				    0x00001000	    
-
-// The ASIC's register to write the PCI_CONFIG_CMD to to access the daughter card's PCI config space 
-#define ASIC_PCI_CONFIG_CMD_REGISTER    0x04           
-
-// Magic bit to access the daughter card's PCI configuration space 
-#define ASIC_PCI_CONFIG_CMD             0x0001            
-
-// The ASIC's daughter card IO tunnel address register to write the PCnet's register address to 
-#define ASIC_IO_ADDRESS_REGISTER	    0x08			
-
-// The ASIC's daughter card IO tunnel data register to read/write the PCnet's selected register 
-#define ASIC_IO_DATA_REGISTER		    0x0C			
-
-// The ASIC's interrupt enable/disable register 
-#define ASIC_IRQ_ENABLE_REGISTER        0x1C            
-
-// The ASIC's index register for accessing the VPD data, byte by byte 
-#define ASIC_VPD_INDEX_REGISTER		    0x24            
-
-// The ASIC's data register for reading(/writing?)  the VPD data, byte by byte 
-#define ASIC_VPD_DATA_REGISTER		    0x25  
-       
-// The ASIC's <unknown> register, related to  the VPD data. "Checksum ok" indicator? 
-#define ASIC_VPD_UNKNOWN_REGISTER	    0x26        
 
 //
 //   Default configuration settings
@@ -347,17 +313,8 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 #define LANCE_MIN_PACKET_SIZE    60
 
 //
-// Device IDs.
-//
-#define    PCNET_ISA_ID           0x00003003
-#define    PCNET_ISA_PLUS_ID      0x02260003
-#define    PCNET_ISA_PLUS_PLUS_ID 0x02261003
-#define    HiLance_ID             0x02430003
-
-//
 // Revision IDs.
 //
-#define    PCNET_ISA_B2_REV_ID    0x4
 #define    PCNET_PCI2_A4_REV_ID   0x12
 #define    PCNET_PCI2_B2_REV_ID   0x16
 #define    PCNET_PCI3_REV_ID      0x20
@@ -670,170 +627,6 @@ typedef struct _LANCE_RECEIVE_DESCRIPTOR {
     USHORT ByteCount;
 
     } LANCE_RECEIVE_DESCRIPTOR,*PLANCE_RECEIVE_DESCRIPTOR;
-
-/*****************************************************************************/
-//
-// Macros to enable/diable interrupt forwarding in the ASIC
-
-#define ASIC_ENABLE_INTERRUPTS(_IOBASE) \
-{\
-    NdisRawWritePortUchar(_IOBASE + ASIC_IRQ_ENABLE_REGISTER, (UCHAR)(1)); \
-}
-
-#define ASIC_DISABLE_INTERRUPTS(_IOBASE) \
-{\
-    NdisRawWritePortUchar(_IOBASE + ASIC_IRQ_ENABLE_REGISTER, (UCHAR)(0)); \
-}
-
-#if MTX	/* Macros using LanceMutex. NEVER use in free builds */
-//
-// Handy macros to read Lance I/O ports.
-//
-
-#define LANCE_READ_CSR_BEFORE_REGISTRATION(_IOBASE, _Port, _Value, _Handle) \
-{\
-	LanceMutex (LOCK);		\
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Port));  \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RDP_PORT)); \
-    NdisRawReadPortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (PULONG)(_Value)); \
-	*_Value &= 0x0000FFFF;\
-	LanceMutex (UNLOCK);\	
-}
-
-#define LANCE_READ_CSR(_IOBASE, _Port, _Value) \
-{\
-	LanceMutex (LOCK);	\
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); 	\
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Port));  \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RDP_PORT)); \
-    NdisRawReadPortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (PULONG)(_Value)); 	\
-	*_Value &= 0x0000FFFF;\
-	LanceMutex (UNLOCK);	\
-}
-
-#define LANCE_WRITE_CSR(_IOBASE, _Port, _Value) \
-{\
-	LanceMutex (LOCK);	\
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); 	\
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Port));  \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RDP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Value & 0x0000FFFF))); 	\
-	LanceMutex (UNLOCK);	\
-}
-
-
-#define LANCE_READ_BCR_BEFORE_REGISTRATION(_IOBASE, _Port, _Value, _Handle) \
-{\
-	LanceMutex (LOCK);  \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Port)); \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_IDP_PORT)); \
-    NdisRawReadPortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (PULONG)(_Value)); \
-	*_Value &= 0x0000FFFF;\
-	LanceMutex (UNLOCK); \
-}
-
-#define LANCE_WRITE_BCR_BEFORE_REGISTRATION(_IOBASE, _Port, _Value, _Handle) \
-{\
-	LanceMutex (LOCK);\
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Port));  \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_IDP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Value & 0x0000FFFF)); \
-	LanceMutex (UNLOCK); \
-}
-
-#define LANCE_READ_BCR(_IOBASE, _Port, _Value) \
-{\
-	LanceMutex (LOCK);	\
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Port));  \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_IDP_PORT)); \
-    NdisRawReadPortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (PULONG)(_Value)); \
-	*_Value &= 0x0000FFFF;\
-	LanceMutex (UNLOCK); \
-}
-
-#define LANCE_WRITE_BCR(_IOBASE, _Port, _Value) \
-{\
-	LanceMutex (LOCK);	\
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER, (ULONG)(_Port));  \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_IDP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Value & 0x0000FFFF))); \
-	LanceMutex (UNLOCK); \
-}
-
-/****************************************************************************/
-
-#else /* #if MTX */
-
-//
-// Handy macros to read Lance I/O ports.
-//
-
-#define LANCE_READ_CSR_BEFORE_REGISTRATION(_IOBASE, _Port, _Value, _Handle) \
-{\
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Port));  \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RDP_PORT)); \
-    NdisRawReadPortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (PULONG)(_Value)); \
-	*_Value &= 0x0000FFFF;\
-}
-
-#define LANCE_READ_CSR(_IOBASE, _Port, _Value) \
-{\
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Port));  \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RDP_PORT)); \
-    NdisRawReadPortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (PULONG)(_Value)); \
-	*_Value &= 0x0000FFFF;\
-}
-
-#define LANCE_WRITE_CSR(_IOBASE, _Port, _Value) \
-{\
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Port));  \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RDP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Value & 0x0000FFFF)); \
-}
-
-#define LANCE_READ_BCR_BEFORE_REGISTRATION(_IOBASE, _Port, _Value, _Handle) \
-{ \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Port));  \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_IDP_PORT)); \
-    NdisRawReadPortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (PULONG)(_Value)); \
-	*_Value &= 0x0000FFFF;\
-}
-
-#define LANCE_WRITE_BCR_BEFORE_REGISTRATION(_IOBASE, _Port, _Value, _Handle) \
-{\
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Port));  \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_IDP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Value & 0x0000FFFF)); \
-}
-
-#define LANCE_READ_BCR(_IOBASE, _Port, _Value) \
-{\
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); 	\
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (ULONG)(_Port));  \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_IDP_PORT)); \
-    NdisRawReadPortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (PULONG)(_Value)); \
-	*_Value &= 0x0000FFFF;\
-}
-
-#define LANCE_WRITE_BCR(_IOBASE, _Port, _Value) \
-{\
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); 	\
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (USHORT)(_Port));  \
-	NdisRawWritePortUlong((_IOBASE + ASIC_IO_ADDRESS_REGISTER), (_IOBASE + ASIC_IO_OFFSET + LANCE_DWIO_IDP_PORT)); \
-    NdisRawWritePortUlong((_IOBASE + ASIC_IO_DATA_REGISTER), (USHORT)(_Value & 0x0000FFFF)); \
-}
-
-#endif /* #if MTX */
 
 /* DWIO register offsets for direct PCI PCnet access (no ASIC bridge). */
 #define LANCE_DWIO_DIRECT_RDP   0x10    /* Register Data Port (CSR data)  */

@@ -86,20 +86,17 @@ Return Value:
    //
    // allocate shared memory in one big chunk
    //
-   if (Adapter->BoardFound == MCA_DEV || Adapter->BoardFound == PCI_DEV)
-   {
-     //
-     // Memory Allocation needed for the 32 Bit devices.
-     //
-     Adapter->AllocatedNonCachedMemorySize = 
+   //
+   // Memory Allocation needed for the 32-bit PCI device.
+   //
+   Adapter->AllocatedNonCachedMemorySize = 
 	     sizeof(LANCE_TRANSMIT_DESCRIPTOR_HI)*TRANSMIT_BUFFERS+
 	     sizeof(LANCE_RECEIVE_DESCRIPTOR_HI)*RECEIVE_BUFFERS + 
 	     sizeof(LANCE_INIT_BLOCK_HI) + 0x40;
 
-     Adapter->AllocatedCachedMemorySize = 
+   Adapter->AllocatedCachedMemorySize = 
 	     TRANSMIT_BUFFER_SIZE*TRANSMIT_BUFFERS+
 	     RECEIVE_BUFFER_SIZE*RECEIVE_BUFFERS+0x50;
-   }
   
    // Allocate map registers.  This function has to be called
    // before calling NdisMAllocateSharedMemory
@@ -166,12 +163,8 @@ Return Value:
 
    //
    // Allocate the initialization block.
-   // added to MCA_DEV
    //
-   if((Adapter->BoardFound == MCA_DEV) || (Adapter->BoardFound == PCI_DEV))
-   {
-     Adapter->InitializationBlock = (PLANCE_INIT_BLOCK_HI) pTempVa;
-   }
+   Adapter->InitializationBlock = (PLANCE_INIT_BLOCK_HI) pTempVa;
 
    NdisSetPhysicalAddressLow(Adapter->InitializationBlockPhysical, pTempPa);
 
@@ -186,13 +179,8 @@ Return Value:
 
    //
    // Allocate the transmit ring descriptors.
-   // added MCA_DEV
    //
-   
-   if((Adapter->BoardFound == MCA_DEV) || (Adapter->BoardFound == PCI_DEV))
-   {
-     Adapter->TransmitDescriptorRing = (PLANCE_TRANSMIT_DESCRIPTOR_HI)pTempVa;
-   }
+   Adapter->TransmitDescriptorRing = (PLANCE_TRANSMIT_DESCRIPTOR_HI)pTempVa;
 
    NdisSetPhysicalAddressLow(Adapter->TransmitDescriptorRingPhysical, pTempPa);
 
@@ -201,10 +189,7 @@ Return Value:
 	 DbgPrint("Transmit descriptors ring: V = %lx, P = %lx\n", pTempVa, pTempPa);
    #endif    
    
-   if((Adapter->BoardFound == MCA_DEV) || (Adapter->BoardFound == PCI_DEV))
-   {
-     Length = sizeof(LANCE_TRANSMIT_DESCRIPTOR_HI)*TRANSMIT_BUFFERS;
-   }
+   Length = sizeof(LANCE_TRANSMIT_DESCRIPTOR_HI)*TRANSMIT_BUFFERS;
 
    pTempVa += Length;
    pTempPa += Length;
@@ -212,11 +197,7 @@ Return Value:
    //
    // Allocate the receive ring descriptors.
    //
-   if((Adapter->BoardFound == MCA_DEV) || (Adapter->BoardFound == PCI_DEV))
-   {
-
-     Adapter->ReceiveDescriptorRing = (PLANCE_RECEIVE_DESCRIPTOR_HI) pTempVa;
-   }
+   Adapter->ReceiveDescriptorRing = (PLANCE_RECEIVE_DESCRIPTOR_HI) pTempVa;
 
    NdisSetPhysicalAddressLow(Adapter->ReceiveDescriptorRingPhysical, pTempPa);
 
@@ -225,11 +206,7 @@ Return Value:
 	 DbgPrint("Receive descriptor ring: V = %lx, P = %lx\n", pTempVa, pTempPa);
    #endif    
    
-   if((Adapter->BoardFound == MCA_DEV) || (Adapter->BoardFound == PCI_DEV)) 
-   {
-
-     Length = sizeof(LANCE_RECEIVE_DESCRIPTOR_HI)*RECEIVE_BUFFERS;
-   }
+   Length = sizeof(LANCE_RECEIVE_DESCRIPTOR_HI)*RECEIVE_BUFFERS;
 
    //
    // Make start memory address segment aligned
