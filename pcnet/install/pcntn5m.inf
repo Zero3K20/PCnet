@@ -22,21 +22,27 @@ DriverVer   = 02/14/2024,5.0.0.0
 
 ; Windows 2000 (NT 5.0) uses the plain .NT section.
 [IBM.NT]
-%PCNTN5M.DeviceDesc% = PCNTN5M.ndi, Root\PCNTN5M
-%PCNTN5M.DeviceDesc% = PCNTN5M.ndi, *PCNTN5M
+%PCNTN5M.DeviceDesc%       = PCNTN5M.ndi,     Root\PCNTN5M
+%PCNTN5M.DeviceDesc%       = PCNTN5M.ndi,     *PCNTN5M
 ; PCI\VEN_1022 = AMD
-%PCNTN5M_PCI0.DeviceDesc% = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2000  ; Am79C970A PCnet-PCI II
-%PCNTN5M_PCI1.DeviceDesc% = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2001  ; Am79C971 PCnet-FAST
-%PCNTN5M_PCI3.DeviceDesc% = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2625  ; Am79C973 PCnet-FAST III
+; NOTE: VirtualBox emulates ALL PCnet variants (PCnet-PCI II and PCnet-FAST III)
+;       using PCI device ID 0x2000; the actual chip type is identified via CSR88.
+%PCNTN5M_PCI0.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2000  ; Am79C970/970A/971/973 (VirtualBox uses this for all PCnet types)
+%PCNTN5M_PCI1.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2001  ; Am79C970A PCnet-PCI II (real hardware)
+%PCNTN5M_PCI3.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2625  ; Am79C973 PCnet-FAST III (real hardware, Rev 0)
+%PCNTN5M_PCI3.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2626  ; Am79C973 PCnet-FAST III (real hardware, Rev 10h)
 
 ; Windows XP, Server 2003, Vista, 7 (x86) use the .NTx86 section.
 [IBM.NTx86]
-%PCNTN5M.DeviceDesc% = PCNTN5M.ndi, Root\PCNTN5M
-%PCNTN5M.DeviceDesc% = PCNTN5M.ndi, *PCNTN5M
+%PCNTN5M.DeviceDesc%       = PCNTN5M.ndi,     Root\PCNTN5M
+%PCNTN5M.DeviceDesc%       = PCNTN5M.ndi,     *PCNTN5M
 ; PCI\VEN_1022 = AMD
-%PCNTN5M_PCI0.DeviceDesc% = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2000  ; Am79C970A PCnet-PCI II
-%PCNTN5M_PCI1.DeviceDesc% = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2001  ; Am79C971 PCnet-FAST
-%PCNTN5M_PCI3.DeviceDesc% = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2625  ; Am79C973 PCnet-FAST III
+; NOTE: VirtualBox emulates ALL PCnet variants (PCnet-PCI II and PCnet-FAST III)
+;       using PCI device ID 0x2000; the actual chip type is identified via CSR88.
+%PCNTN5M_PCI0.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2000  ; Am79C970/970A/971/973 (VirtualBox uses this for all PCnet types)
+%PCNTN5M_PCI1.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2001  ; Am79C970A PCnet-PCI II (real hardware)
+%PCNTN5M_PCI3.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2625  ; Am79C973 PCnet-FAST III (real hardware, Rev 0)
+%PCNTN5M_PCI3.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2626  ; Am79C973 PCnet-FAST III (real hardware, Rev 10h)
 
 [PCNTN5M.ndi]
 Characteristics = 0x4  ; NCF_PHYSICAL
@@ -121,6 +127,10 @@ IBM                      = "IBM"
 PCNTN5M.DeviceDesc       = "IBM 10/100 Ethernet MCA Adapter (San Remo)"
 PCNTN5M.Service.DispName = "IBM 10/100 Ethernet MCA Miniport"
 DiskName                 = "IBM San Remo Driver Disk"
-PCNTN5M_PCI0.DeviceDesc  = "AMD PCnet-PCI II Ethernet Adapter (Am79C970A)"
-PCNTN5M_PCI1.DeviceDesc  = "AMD PCnet-FAST Ethernet Adapter (Am79C971)"
+; DEV_2000 is used by VirtualBox for all PCnet variants (PCnet-PCI II and PCnet-FAST III);
+; the actual chip (Am79C970A / Am79C973 / etc.) is detected via CSR88 by the driver.
+PCNTN5M_PCI0.DeviceDesc  = "AMD PCnet Ethernet Adapter"
+; DEV_2001 is the correct PCI ID for real Am79C970A (PCnet-PCI II) hardware.
+PCNTN5M_PCI1.DeviceDesc  = "AMD PCnet-PCI II Ethernet Adapter (Am79C970A)"
+; DEV_2625 / DEV_2626 are the PCI IDs for real Am79C973 (PCnet-FAST III) hardware.
 PCNTN5M_PCI3.DeviceDesc  = "AMD PCnet-FAST III Ethernet Adapter (Am79C973)"
