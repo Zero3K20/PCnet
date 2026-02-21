@@ -835,42 +835,48 @@ typedef struct _LANCE_RECEIVE_DESCRIPTOR {
 
 #endif /* #if MTX */
 
+/* DWIO register offsets for direct PCI PCnet access (no ASIC bridge). */
+#define LANCE_DWIO_DIRECT_RDP   0x10    /* Register Data Port (CSR data)  */
+#define LANCE_DWIO_DIRECT_RAP   0x14    /* Register Address Port          */
+#define LANCE_DWIO_DIRECT_RST   0x18    /* Reset register                 */
+#define LANCE_DWIO_DIRECT_IDP   0x1C    /* IDP (BCR data)                 */
+
 /* Direct DWIO register access for PCI PCnet adapters (no ASIC bridge).
  * In DWIO mode: RAP is at base+0x14, RDP at base+0x10, IDP at base+0x1C. */
 static __inline VOID
 LancePciWriteRap(ULONG Base, ULONG Reg)
 {
-    NdisRawWritePortUlong(Base + 0x14, Reg);
+    NdisRawWritePortUlong(Base + LANCE_DWIO_DIRECT_RAP, Reg);
 }
 
 static __inline VOID
 LancePciReadCsr(ULONG Base, ULONG Reg, PULONG Value)
 {
-    NdisRawWritePortUlong(Base + 0x14, Reg);
-    NdisRawReadPortUlong(Base + 0x10, Value);
+    NdisRawWritePortUlong(Base + LANCE_DWIO_DIRECT_RAP, Reg);
+    NdisRawReadPortUlong(Base + LANCE_DWIO_DIRECT_RDP, Value);
     *Value &= 0x0000FFFF;
 }
 
 static __inline VOID
 LancePciWriteCsr(ULONG Base, ULONG Reg, ULONG Value)
 {
-    NdisRawWritePortUlong(Base + 0x14, Reg);
-    NdisRawWritePortUlong(Base + 0x10, Value & 0x0000FFFF);
+    NdisRawWritePortUlong(Base + LANCE_DWIO_DIRECT_RAP, Reg);
+    NdisRawWritePortUlong(Base + LANCE_DWIO_DIRECT_RDP, Value & 0x0000FFFF);
 }
 
 static __inline VOID
 LancePciReadBcr(ULONG Base, ULONG Reg, PULONG Value)
 {
-    NdisRawWritePortUlong(Base + 0x14, Reg);
-    NdisRawReadPortUlong(Base + 0x1C, Value);
+    NdisRawWritePortUlong(Base + LANCE_DWIO_DIRECT_RAP, Reg);
+    NdisRawReadPortUlong(Base + LANCE_DWIO_DIRECT_IDP, Value);
     *Value &= 0x0000FFFF;
 }
 
 static __inline VOID
 LancePciWriteBcr(ULONG Base, ULONG Reg, ULONG Value)
 {
-    NdisRawWritePortUlong(Base + 0x14, Reg);
-    NdisRawWritePortUlong(Base + 0x1C, Value & 0x0000FFFF);
+    NdisRawWritePortUlong(Base + LANCE_DWIO_DIRECT_RAP, Reg);
+    NdisRawWritePortUlong(Base + LANCE_DWIO_DIRECT_IDP, Value & 0x0000FFFF);
 }
 /****************************************************************************/
 

@@ -1882,7 +1882,7 @@ Return Value:
 	{
 		/* PCI direct: reset chip by reading RESET register at BAR0+0x18 */
 		ULONG ResetVal;
-		NdisRawReadPortUlong(Adapter->PhysicalIoBaseAddress + 0x18, &ResetVal);
+		NdisRawReadPortUlong(Adapter->PhysicalIoBaseAddress + LANCE_DWIO_DIRECT_RST, &ResetVal);
 		NdisStallExecution(500);
 	}
 #if DBG
@@ -2006,6 +2006,16 @@ LanceCleanResources(
 #endif
 }
 
+/* CSR88 chip ID register and PARTID constants for PCnet detection. */
+#define LANCE_CSR88_CHIP_ID      88     /* CSR containing chip PARTID         */
+#define LANCE_CSR88_PARTID_SHIFT  4     /* PARTID field starts at bit 4       */
+#define LANCE_CSR88_PARTID_MASK  0xFF   /* 8-bit PARTID after shift           */
+#define LANCE_PARTID_AM79C970A   0x57   /* PCnet-PCI II (Am79C970A)           */
+#define LANCE_PARTID_AM79C971    0x4C   /* PCnet-FAST   (Am79C971)            */
+#define LANCE_PARTID_AM79C972    0x4D   /* PCnet-FAST+  (Am79C972)            */
+#define LANCE_PARTID_AM79C973    0x4E   /* PCnet-FAST III (Am79C973)          */
+#define LANCE_PARTID_AM79C975    0x4F   /* PCnet-FAST III+ (Am79C975)         */
+
 STATIC
 VOID
 LanceScanMca(
@@ -2050,18 +2060,18 @@ Return Value:
 
         /* Detect chip type from CSR88 (chip ID register). Bits [11:4] = PARTID. */
         ChipId = 0;
-        LancePciReadCsr(Adapter->PhysicalIoBaseAddress, 88, &ChipId);
-        switch ((ChipId >> 4) & 0xFF)
+        LancePciReadCsr(Adapter->PhysicalIoBaseAddress, LANCE_CSR88_CHIP_ID, &ChipId);
+        switch ((ChipId >> LANCE_CSR88_PARTID_SHIFT) & LANCE_CSR88_PARTID_MASK)
         {
-        case 0x57:  /* Am79C970A — PCnet-PCI II */
+        case LANCE_PARTID_AM79C970A:  /* Am79C970A — PCnet-PCI II */
             Adapter->DeviceType = PCNET_PCI_DIRECT;
             break;
-        case 0x4C:  /* Am79C971 — PCnet-FAST */
-        case 0x4D:  /* Am79C972 — PCnet-FAST+ */
+        case LANCE_PARTID_AM79C971:   /* Am79C971 — PCnet-FAST */
+        case LANCE_PARTID_AM79C972:   /* Am79C972 — PCnet-FAST+ */
             Adapter->DeviceType = PCNET_PCI2_B2;
             break;
-        case 0x4E:  /* Am79C973 — PCnet-FAST III */
-        case 0x4F:  /* Am79C975 — PCnet-FAST III+ */
+        case LANCE_PARTID_AM79C973:   /* Am79C973 — PCnet-FAST III */
+        case LANCE_PARTID_AM79C975:   /* Am79C975 — PCnet-FAST III+ */
         default:
             Adapter->DeviceType = PCNET_PCI3;
             break;
