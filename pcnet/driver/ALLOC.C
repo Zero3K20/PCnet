@@ -88,9 +88,6 @@ Return Value:
    //
    if (Adapter->BoardFound == MCA_DEV || Adapter->BoardFound == PCI_DEV)
    {
-	  if (maxMapReg == DEFAULT_MAP_REG_COUNT)
-			maxMapReg *= 2;
-	
      //
      // Memory Allocation needed for the 32 Bit devices.
      //
