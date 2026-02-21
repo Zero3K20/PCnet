@@ -74,11 +74,11 @@ $Log:   V:\network\pcnet\mini3&4\src\lancesft.h_v  $
 #define LANCE_DRIVER_MINOR_VERSION 0
 
 #ifdef _FAILOVER
-	#define LANCE_DRIVER_NAME	"PCNTN4PS"
-#elif defined(NDIS40_MINIPORT)
-	#define LANCE_DRIVER_NAME	"PCNTN4M"
+	#define LANCE_DRIVER_NAME	"PCNTN5PS"
+#elif defined(NDIS50_MINIPORT)
+	#define LANCE_DRIVER_NAME	"PCNTN5M"
 #else
-	#define LANCE_DRIVER_NAME	"PCNTN3M"
+	#define LANCE_DRIVER_NAME	"PCNTN5M"
 #endif
 
 /* We use STATIC to define procedures that will be static in the */
@@ -164,8 +164,8 @@ $Log:   V:\network\pcnet\mini3&4\src\lancesft.h_v  $
 #define	PROT_RESERVED_AREA_SIZE		0
 
 /* Used when registering ourselves with NDIS.	*/
-#if NDIS40_MINIPORT
- #define LANCE_NDIS_MAJOR_VERSION	0x04
+#if NDIS50_MINIPORT
+ #define LANCE_NDIS_MAJOR_VERSION	0x05
  #define LANCE_NDIS_MINOR_VERSION	0x00
  #define MAX_SEND_PACKETS 4
 #else
@@ -257,38 +257,20 @@ typedef enum DmiSpecific
 #define FDUP_OFF		0x0000		/* Full Duplex Mode turned off			*/
 #define FDUP_AUI		0x0003		/* AUI Mode turned on					*/
 #define FDUP_10BASE_T	0x0001		/* 10Base-T Mode turned on				*/
-#define PART_NO_MASK	0x0003		/* PCNetISA ID MASK						*/
 #define LINESPEED_DEFAULT 10		/* PCnet default line speed			*/
-
-/* Device bus type	*/
-
-#define PCI_DEV			0x01		/* PCI bus flag					*/
-#define PLUG_PLAY_DEV	0x02		/* PnP ISA bus flag				*/
-#define LOCAL_DEV		0x03		/* Local bus flag				*/
-#define MCA_DEV			0x05        /* MCA bus flag					*/
 
 /* MapRegisters */
 #define DEFAULT_MAP_REG_COUNT 	2
 
-/* Device type on ISA bus	*/
+/* Device type	*/
 #define LANCE				0x00	/* LANCE present FLAG				*/
-#define PCNET_ISA			0x01	/* PCNetISA flag					*/
-#define PCNET_ISA_PLUS		0x02	/* PCNetISA + present flag			*/
-#define PCNET_ISA_PLUS_PLUS	0x03	/* PCNetISA ++ present flag			*/
 #define PCNET_PCI2_A4		0x04	/* PCNetPCI 2 rev A4 present flag	*/
 #define PCNET_PCI2_B2		0x05	/* PCNetPCI 2 rev B2 present flag	*/
 #define PCNET_PCI3			0x06	/* PCNetPCI 3 present flag			*/
-#define PCNET_PCI1			0x07	/* PCNetPCI 3 present flag			*/
+#define PCNET_PCI1			0x07	/* PCNetPCI 1 (Am79C970A PCnet-PCI II)	*/
 
 
-/* Chip ID in CSR 9 :	*/
-/*	LANSHARK - PCnet-ISA+ (Am79C961)	*/
-/*	HILANCE	- PCnet-VL	(Am79C965)	*/
-#define LANSHARK			0x01		/* LANSHARK dev ID	(offset 09)	*/	
-#define HILANCE				0x10		/* HILANCE dev ID (offset 09)	*/	
-#define PCNET_PCI_ID		0x20001022	/* vendor/device id -- Presidio	*/	
-#define ISA_IRQ_DEF			3			/* default IRQ for ISA			*/
-#define ISA_DMA_DEF			5			/* default DMA for ISA			*/
+
 
 #define LANCE_INIT_OK			0	/* LanceHardwareDetails return codes */
 #define LANCE_INIT_WARNING_8	8
@@ -305,10 +287,6 @@ typedef enum DmiSpecific
 #define LANCE_INIT_ERROR_19		19
 #define LANCE_INIT_ERROR_20		20
 #define LANCE_INIT_ERROR_21		21
-#define LANCE_INIT_ERROR_22		22
-#define LANCE_INIT_ERROR_23		23
-#define LANCE_INIT_ERROR_24		24
-#define LANCE_INIT_ERROR_25		25
 
 #define ANCHOR_ID 				0x0701110e		/* Anchorage id */
 #define HILANCE_PORT			0x8800			/* Hilance port in Anchorage */
@@ -344,13 +322,11 @@ UCHAR LanceMutex (USHORT Flag);
 /* Macros used for memory allocation and deallocation.	*/
 #define LANCE_ALLOC_MEMORY(_Status, _Address, _Length)					\
 {																		\
-	NDIS_PHYSICAL_ADDRESS Temp = NDIS_PHYSICAL_ADDRESS_CONST(-1, -1); 	\
-	*(_Status) = NdisAllocateMemory(									\
-					(PVOID)(_Address),									\
-					(_Length), 	 										\
-					0,			 										\
-					Temp		 										\
-					);			 										\
+	*(_Status) = NdisAllocateMemoryWithTag(								\
+					(PVOID *)(_Address),								\
+					(_Length),											\
+					'ECNL'												\
+					);													\
 }
 
 #define LANCE_FREE_MEMORY(Address, Length)								\
@@ -358,32 +334,28 @@ UCHAR LanceMutex (USHORT Flag);
 
 #define LANCE_ALLOC_CONTIGUOUS_MEMORY(_Status, _Address, _Length)		\
 {																		\
-	NDIS_PHYSICAL_ADDRESS Temp = NDIS_PHYSICAL_ADDRESS_CONST(-1, 0);	\
-	*(_Status) = NdisAllocateMemory((PVOID)(_Address),					\
-									(_Length),							\
-									NDIS_MEMORY_CONTIGUOUS,				\
-									Temp);								\
+	*(_Status) = NdisAllocateMemoryWithTag(								\
+					(PVOID *)(_Address),								\
+					(_Length),											\
+					'ECNL'												\
+					);													\
 }
 
 #define LANCE_FREE_CONTIGUOUS_MEMORY(Address, Length)					\
-	NdisFreeMemory((PVOID)(Address), (Length), NDIS_MEMORY_CONTIGUOUS)
+	NdisFreeMemory((PVOID)(Address), (Length), 0)
 
 #define LANCE_ALLOC_NONCACHED_MEMORY(_Status, _Address, _Length)		\
 {																		\
-	NDIS_PHYSICAL_ADDRESS Temp = NDIS_PHYSICAL_ADDRESS_CONST(-1, 0);	\
-	*(_Status) = NdisAllocateMemory((PVOID)(_Address),					\
-									(_Length),							\
-									(NDIS_MEMORY_CONTIGUOUS |			\
-									NDIS_MEMORY_NONCACHED),				\
-									Temp);								\
+	*(_Status) = NdisAllocateMemoryWithTag(								\
+					(PVOID *)(_Address),								\
+					(_Length),											\
+					'ECNL'												\
+					);													\
 }
 
 #define LANCE_FREE_NONCACHED_MEMORY(Address, Length)					\
 {																		\
-	NdisFreeMemory((PVOID)(Address),									\
-				   (Length),											\
-				   (NDIS_MEMORY_CONTIGUOUS |							\
-				   NDIS_MEMORY_NONCACHED))								\
+	NdisFreeMemory((PVOID)(Address), (Length), 0);						\
 }
 
 
@@ -499,7 +471,7 @@ typedef struct _LANCE_ADAPTER
 
 /* OK TO ADD/MODIFY STRUCTURE PAST THIS POINT. */
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 	NDIS_HANDLE LanceRedMiniportHandle;
 
@@ -532,7 +504,7 @@ typedef struct _LANCE_ADAPTER
 	/* Bus type, i.e., ISA, PCI */
 	USHORT BusType;
 
-	/* Device Type, i.e., PCNET-ISA or LANCE */
+	/* Device Type, i.e., PCnet-PCI variant */
 	UCHAR DeviceType;
 	UCHAR MIIPhyDetected;
 
@@ -566,7 +538,6 @@ typedef struct _LANCE_ADAPTER
 	USHORT BusTimer;
 
 	/* Keywords for the adapter. */
-	ULONG BusScan;
 	ULONG tp;
 	ULONG MpMode;
 	ULONG RedundantMode;
@@ -581,9 +552,6 @@ typedef struct _LANCE_ADAPTER
 
 	/* Line Speed Value. */
 	USHORT LineSpeed;
-
-	/* Board Type found. ISA+, ISA, LOCAL, PCI */
-	UCHAR BoardFound;
 
 	/* Memory allocated */
 	ULONG AllocatedNonCachedMemorySize;
@@ -684,7 +652,7 @@ typedef struct _LANCE_ADAPTER
 	/* The current network address from the hardware. */
 	UCHAR CurrentNetworkAddress[ETH_LENGTH_OF_ADDRESS];
 
-#if NDIS40_MINIPORT
+#if NDIS50_MINIPORT
 	/* Array of NDIS packet pointers for NDIS4 Multi-Rx.	*/
 	PNDIS_PACKET pNdisPacket[RECEIVE_BUFFERS];
 	PNDIS_PACKET PktArray[RECEIVE_BUFFERS];
@@ -817,7 +785,7 @@ typedef struct _LANCE_REQUEST_RESERVED {
 /* Maximum adapters supported by this driver */
 // #define	MAX_ADAPTERS				4
 
-#if NDIS40_MINIPORT
+#if NDIS50_MINIPORT
 // MJ modified 12 -> 4 and 400 ->1500
  #define	LINK_TIMEOUT			4 /* number of LINK_FREQ units */
  #define	LINK_FREQ				1500	/* # of ms for LanceLinkMonitor function */
@@ -830,7 +798,7 @@ typedef struct _LANCE_REQUEST_RESERVED {
  #define	LINK_UP_COUNT			2
  #define	LINK_DOWN_COUNT			2
 
-#endif /* NDIS40_MINIPORT */
+#endif /* NDIS50_MINIPORT */
 
 /* procedures which do error logging */
 typedef enum _LANCE_PROC_ID{
@@ -969,7 +937,7 @@ LanceHandleInterrupt(
 /*
 	MJ removed Multi_Send function to check Browser problem.
 */
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 VOID
 LanceReturnPacket(
@@ -1005,7 +973,7 @@ LanceDeleteAdapterMemory(
 	IN	PLANCE_ADAPTER		Adapter
 	);
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 VOID
 LanceCableTimerFunction(
@@ -1030,6 +998,24 @@ LanceGetActiveMediaInfo (
 	);
 
 #endif 
+
+/* I/O dispatch helpers — always use direct PCI access (no ASIC bridge). */
+static __inline VOID LanceReadCsr(PLANCE_ADAPTER Adapter, ULONG Reg, PULONG Value)
+{
+    LancePciReadCsr(Adapter->MappedIoBaseAddress, Reg, Value);
+}
+static __inline VOID LanceWriteCsr(PLANCE_ADAPTER Adapter, ULONG Reg, ULONG Value)
+{
+    LancePciWriteCsr(Adapter->MappedIoBaseAddress, Reg, Value);
+}
+static __inline VOID LanceReadBcr(PLANCE_ADAPTER Adapter, ULONG Reg, PULONG Value)
+{
+    LancePciReadBcr(Adapter->MappedIoBaseAddress, Reg, Value);
+}
+static __inline VOID LanceWriteBcr(PLANCE_ADAPTER Adapter, ULONG Reg, ULONG Value)
+{
+    LancePciWriteBcr(Adapter->MappedIoBaseAddress, Reg, Value);
+}
 
 #endif /* #ifndef DMIDLL */
 

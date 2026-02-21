@@ -38,12 +38,11 @@ Revision History:
 
 
 #include <ndis.h>
-#include <efilter.h>
 #include <lancehrd.h>
 #include <lancesft.h>
 
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 #if DBG
 	UINT PeakPkts = 0;
@@ -163,13 +162,11 @@ Return Value:
 	switch (Adapter->DeviceType)
 	{
 		case LANCE:
-		case PCNET_ISA:
-		case PCNET_ISA_PLUS:
 		case PCNET_PCI2_A4:
 		case PCNET_PCI1:
 			/* If the chip not running, restart it */
 
-			LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, &Csr0Value);
+			LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
 
 			if ((Csr0Value & LANCE_CSR0_RUNNING) != LANCE_CSR0_RUNNING)
 			{
@@ -229,9 +226,9 @@ Return Value:
 			NumberOfPackets++;
 			if(oldNumPkts != NumberOfPackets)
 			{
-				LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, &Csr0Value);
+				LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
 				Csr0Value &= LANCE_CSR0_IENA;
-				LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
+				LanceWriteCsr(Adapter, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
 			}
 			while (NumberOfPackets--) {
 				NDIS_SET_PACKET_STATUS(*PacketArray,NDIS_STATUS_RESOURCES);
@@ -298,8 +295,7 @@ Return Value:
 			}
 
 			if (Adapter->DeviceType != PCNET_PCI2_B2 &&
-			Adapter->DeviceType != PCNET_PCI3 &&
-			Adapter->DeviceType != PCNET_ISA_PLUS_PLUS)
+			Adapter->DeviceType != PCNET_PCI3)
 			{
 
 				if ((TransmitError & LANCE_TRANSMIT_UFLO_ERROR) ||
@@ -431,15 +427,8 @@ Return Value:
 		Buffer.StartVa = CurrentDestination;
 		Buffer.ByteCount = TotalPacketSize;
 		Buffer.ByteOffset = 0;
-
-		NdisFlushBuffer (&Buffer, TRUE);
-
-		NdisMUpdateSharedMemory (Adapter->LanceMiniportHandle,
-								TotalPacketSize,
-								CurrentDestination,
-								Adapter->TransmitBufferPointerPhysical +
-								(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE)
-								);
+		/* NdisFlushBuffer and NdisMUpdateSharedMemory are no-ops in NDIS 5.x;
+		 * omitted for WDK 7600 compatibility. */
 								
 		if (Adapter->SwStyle == SW_STYLE_2)
 		{
@@ -558,9 +547,9 @@ Return Value:
 		#endif
 	} //while
 
-		LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, &Csr0Value);
+		LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
 		Csr0Value &= LANCE_CSR0_IENA;
-		LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
+		LanceWriteCsr(Adapter, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
 
 	#if DBG
 		if (LanceDbg)
@@ -607,7 +596,7 @@ TxReset (
 	}
 }
 
-#else	/* start *NOT* NDIS40_MINIPORT */
+#else	/* start *NOT* NDIS50_MINIPORT */
 
 NDIS_STATUS
 LanceSend(
@@ -696,13 +685,12 @@ Return Value:
 	#endif
 
 	if (Adapter->DeviceType != PCNET_PCI2_B2 &&
-		Adapter->DeviceType != PCNET_PCI3 &&
-		Adapter->DeviceType != PCNET_ISA_PLUS_PLUS)
+		Adapter->DeviceType != PCNET_PCI3)
 	{
 		//
 		// If chip not running, restart it
 		//
-		LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, &Csr0Value);
+		LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
 
 		if ((Csr0Value & LANCE_CSR0_RUNNING) != LANCE_CSR0_RUNNING)
 		{
@@ -833,8 +821,7 @@ Return Value:
 			}
 
 			if (Adapter->DeviceType != PCNET_PCI2_B2 &&
-			Adapter->DeviceType != PCNET_PCI3 &&
-			Adapter->DeviceType != PCNET_ISA_PLUS_PLUS)
+			Adapter->DeviceType != PCNET_PCI3)
 			{
 
 				if ((TransmitError & LANCE_TRANSMIT_UFLO_ERROR) ||
@@ -964,14 +951,8 @@ Return Value:
 	Buffer.ByteCount = TotalPacketSize;
 	Buffer.ByteOffset = 0;
 
-	NdisFlushBuffer (&Buffer, TRUE);
-
-	NdisMUpdateSharedMemory (Adapter->LanceMiniportHandle,
-							TotalPacketSize,
-							CurrentDestination,
-							Adapter->TransmitBufferPointerPhysical +
-							(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE)
-							);
+	/* NdisFlushBuffer and NdisMUpdateSharedMemory are no-ops in NDIS 5.x;
+	 * omitted for WDK 7600 compatibility. */
 							
 	if (Adapter->SwStyle == SW_STYLE_2)
 	{
@@ -1072,9 +1053,9 @@ Return Value:
 	// 
 	// Start chip now to send packet on the wire
 	//
-	LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, &Csr0Value);
+	LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
 	Csr0Value &= LANCE_CSR0_IENA;
-	LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
+	LanceWriteCsr(Adapter, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
 
 	//
 	// Increment the next available xit descriptor index.
@@ -1100,7 +1081,7 @@ Return Value:
 	#endif
 	return NDIS_STATUS_SUCCESS;
 }	
-#endif	/* end *NOT* NDIS40_MINIPORT */
+#endif	/* end *NOT* NDIS50_MINIPORT */
 
 STATIC
 VOID
@@ -1110,9 +1091,9 @@ EnableTxInts (
 {
 	ULONG		Data;
 
- 	LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR3, &Data);
+ 	LanceReadCsr(Adapter, LANCE_CSR3, &Data);
  	Data &= ~LANCE_CSR3_TINTM;
- 	LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR3, Data);
+ 	LanceWriteCsr(Adapter, LANCE_CSR3, Data);
 }
 
 #ifdef _FAILOVER
@@ -1178,13 +1159,11 @@ Return Value:
 	switch (Adapter->DeviceType)
 	{
 		case LANCE:
-		case PCNET_ISA:
-		case PCNET_ISA_PLUS:
 		case PCNET_PCI2_A4:
 		case PCNET_PCI1:
 			/* If the chip not running, restart it */
 
-			LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, &Csr0Value);
+			LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
 
 			if ((Csr0Value & LANCE_CSR0_RUNNING) != LANCE_CSR0_RUNNING)
 			{
@@ -1246,9 +1225,9 @@ Return Value:
 			NumberOfPackets++;
 			if(oldNumPkts != NumberOfPackets)
 			{
-				LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, &Csr0Value);
+				LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
 				Csr0Value &= LANCE_CSR0_IENA;
-				LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
+				LanceWriteCsr(Adapter, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
 			}
 			while (NumberOfPackets--) {
 				NDIS_SET_PACKET_STATUS(*PacketArray,NDIS_STATUS_RESOURCES);
@@ -1315,8 +1294,7 @@ Return Value:
 			}
 
 			if (Adapter->DeviceType != PCNET_PCI2_B2 &&
-			Adapter->DeviceType != PCNET_PCI3 &&
-			Adapter->DeviceType != PCNET_ISA_PLUS_PLUS)
+			Adapter->DeviceType != PCNET_PCI3)
 			{
 
 				if ((TransmitError & LANCE_TRANSMIT_UFLO_ERROR) ||
@@ -1438,15 +1416,8 @@ Return Value:
 		Buffer.StartVa = CurrentDestination;
 		Buffer.ByteCount = TotalPacketSize;
 		Buffer.ByteOffset = 0;
-
-		NdisFlushBuffer (&Buffer, TRUE);
-
-		NdisMUpdateSharedMemory (Adapter->LanceMiniportHandle,
-								TotalPacketSize,
-								CurrentDestination,
-								Adapter->TransmitBufferPointerPhysical +
-								(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE)
-								);
+		/* NdisFlushBuffer and NdisMUpdateSharedMemory are no-ops in NDIS 5.x;
+		 * omitted for WDK 7600 compatibility. */
 								
 		if (Adapter->SwStyle == SW_STYLE_2)
 		{
@@ -1554,9 +1525,9 @@ Return Value:
 	} // while (NumberOfPackets --)
 
 	/* Start chip now to send packet on the wire */
-	LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, &Csr0Value);
+	LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
 	Csr0Value &= LANCE_CSR0_IENA;
-	LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
+	LanceWriteCsr(Adapter, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
 
 	#if DBG
 		if (LanceDbg)

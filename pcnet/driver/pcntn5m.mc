@@ -1,5 +1,5 @@
 ;
-;//File Name: failover.mc
+;//File Name: pcntn5m.mc
 ;//
 ;//  Note: comments in the .mc file must use both ";" and "//".
 ;//
@@ -39,7 +39,7 @@ FacilityNames=(System=0x0
                RpcRuntime=0x2:FACILITY_RPC_RUNTIME
                RpcStubs=0x3:FACILITY_RPC_STUBS
                Io=0x4:FACILITY_IO_ERROR_CODE
-	       FailOver=0x7:FACILITY_PCNTN4M_ERROR_CODE
+	       FailOver=0x7:FACILITY_PCNTN5M_ERROR_CODE
               )
 
 ;

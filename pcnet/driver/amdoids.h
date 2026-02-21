@@ -125,9 +125,6 @@ Author(s):	Mike Steiger a.k.a. Rich Compelling
 
 #define	DMI_NO_BOARD					0
 #define	DMI_PCI_BOARD					1
-#define	DMI_PLUG_PLAY_BOARD				2
-#define	DMI_LOCAL_BOARD					3
-#define	DMI_ISA_BOARD					4
 
 #define	OID_DATA_SIZE					64
 #endif /* _LANCEOID_ */

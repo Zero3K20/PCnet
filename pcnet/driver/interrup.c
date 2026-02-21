@@ -59,11 +59,10 @@ Revision History:
 --*/
 
 #include <ndis.h>
-#include <efilter.h>
 #include <lancehrd.h>
 #include <lancesft.h>
 
-#ifdef	NDIS40_MINIPORT
+#ifdef	NDIS50_MINIPORT
 
 STATIC
 VOID
@@ -79,7 +78,7 @@ RcvComplete (
 	USHORT					PktIndex
 	);
 
-#endif	/* NDIS40_MINIPORT */
+#endif	/* NDIS50_MINIPORT */
 
 VOID
 LanceEnableInterrupt(
@@ -103,7 +102,6 @@ Return Value:
 --*/
 
 {
-	ULONG SavedRAPValue;
 
 	#if DBG
 		if (LanceDbg)
@@ -111,8 +109,7 @@ Return Value:
 	#endif
 	
 	/* Enable device interrupts	*/
-	ASIC_ENABLE_INTERRUPTS(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress);
-	LANCE_WRITE_CSR(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress, LANCE_CSR0, LANCE_CSR0_IENA);
+	LanceWriteCsr((PLANCE_ADAPTER)Adapter, LANCE_CSR0, LANCE_CSR0_IENA);
 	
 	#if DBG
 		if (LanceDbg)
@@ -143,7 +140,6 @@ Return Value:
 --*/
 
 {
-	ULONG SavedRAPValue;
 
 	#if DBG
 		if (LanceDbg)
@@ -152,17 +148,12 @@ Return Value:
 
 	/* Save RAP value */
 	//NdisRawReadPortUshort(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + LANCE_RAP_PORT, &SavedRAPValue);		
-	//NdisRawWritePortUlong((((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + ASIC_IO_ADDRESS_REGISTER), ((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT); 	
-    //NdisRawReadPortUlong((((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + ASIC_IO_DATA_REGISTER), &SavedRAPValue); 
 
 	/* Disable device interrupts.	Only IENA is affected by writing 0	*/
-	ASIC_DISABLE_INTERRUPTS(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress);
-	LANCE_WRITE_CSR(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress, LANCE_CSR0, 0);
+	LanceWriteCsr((PLANCE_ADAPTER)Adapter, LANCE_CSR0, 0);
 
 	/* Restore RAP value */	
 	//NdisRawWritePortUshort(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + LANCE_RAP_PORT, SavedRAPValue);
-	//NdisRawWritePortUlong((((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + ASIC_IO_ADDRESS_REGISTER), ((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT); 	
-    //NdisRawWritePortUlong((((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + ASIC_IO_DATA_REGISTER), SavedRAPValue); 
 
 	#if DBG
 		if (LanceDbg)
@@ -206,8 +197,6 @@ Return Value:
 
 	PLANCE_ADAPTER	Adapter = Context;
 	ULONG			Csr0Value;
-	ULONG			SavedRAPValue;
-	USHORT ASICData18, ASICData02;
 
 	#if DBG
 		if (LanceDbg)
@@ -215,11 +204,6 @@ Return Value:
 	#endif
 
 	LOG(IN_ISR)
-
-	/* Read ASIC interrupt flags?
-       ASIC is not documented. */
-	NdisRawReadPortUshort((Adapter->MappedIoBaseAddress + 0x18), &ASICData18);
-	NdisRawReadPortUshort((Adapter->MappedIoBaseAddress + 0x02), &ASICData02);
 
 	/* Set default return value	*/
 	*InterruptRecognized = FALSE;
@@ -238,11 +222,9 @@ Return Value:
 	/* Save RAP value */
 	////NdisRawReadPortUshort(Adapter->MappedIoBaseAddress + LANCE_RAP_PORT, &SavedRAPValue);
 	//****This is not used in the Phoenix code
-	//NdisRawWritePortUlong((Adapter->MappedIoBaseAddress + ASIC_IO_ADDRESS_REGISTER), (Adapter->MappedIoBaseAddress + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); 	
-    //NdisRawReadPortUlong((Adapter->MappedIoBaseAddress + ASIC_IO_DATA_REGISTER), &SavedRAPValue);   
 
 	/* Read CSR0 value	*/
-	LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, &Csr0Value);
+	LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
 
 	/* Check if we own this interrupt	*/	
 	if ((Csr0Value & (LANCE_CSR0_INTR)) && (Csr0Value & (LANCE_CSR0_IENA)) )
@@ -250,7 +232,7 @@ Return Value:
 		/* Disable interrupt source. Writing zeroes to the interrupt status */
 		/* bits in CSR0 has no effect on them. All the other bits except	*/
 		/* IENA (interrupt enable, bit 6) are read only.					*/
-		LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, 0);
+		LanceWriteCsr(Adapter, LANCE_CSR0, 0);
 
 		/* Replace default return value	*/
 		*InterruptRecognized = TRUE;
@@ -271,25 +253,15 @@ Return Value:
 	{
 		#if DBG
 		if (LanceDbg)
+		{
 			DbgPrint("IDON bit = %x\n",Csr0Value);
 			DbgPrint("LanceISR routine: Not my interrupt.\n");
+		}
 		#endif
 	}
 
-    /* Acknowledge ASIC interrupt flags and re-prepare?
-	   ASIC is not documented. */
-	NdisRawWritePortUshort((Adapter->MappedIoBaseAddress + 0x18), ASICData18);
-	NdisRawWritePortUshort((Adapter->MappedIoBaseAddress + 0x02), ASICData02);
-	NdisRawWritePortUshort((Adapter->MappedIoBaseAddress + 0x1A), 0x0FFF);
-
 	LOG(OUT_ISR)
 
-	/* Restore RAP value */
-	//NdisRawWritePortUshort(Adapter->MappedIoBaseAddress + LANCE_DWIO_RAP_PORT, SavedRAPValue);
-	//***Not use in Phoenix code
-	//NdisRawWritePortUlong((Adapter->MappedIoBaseAddress + ASIC_IO_ADDRESS_REGISTER), (Adapter->MappedIoBaseAddress + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); 	
-    //NdisRawWritePortUlong((Adapter->MappedIoBaseAddress + ASIC_IO_DATA_REGISTER), SavedRAPValue); 		
-   
 	#if DBG
 		if (LanceDbg)
 		DbgPrint("<==LanceISR\n");
@@ -368,7 +340,7 @@ Return Value:
 	USHORT BufferSize;
 
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 	PNDIS_PACKET *			PktArray = Adapter->PktArray;
 	PNDIS_BUFFER *			BufArray = Adapter->BufArray;
@@ -404,7 +376,7 @@ Return Value:
 	}
 
 	/* Read CSR0 for interrupts	*/
-	LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, &Csr0Value);
+	LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
 
 	/* Check if there are any pending interrupts	*/
 	/* If STOP bit is set, reset the chip.	Note: when	*/
@@ -445,23 +417,6 @@ Return Value:
 		return;
 
 	}
-
-	if ((Csr0Value & LANCE_CSR0_MISS) &&
-		(Adapter->DeviceType == PCNET_ISA) &&
-		(Adapter->DeviceRevisionId != PCNET_ISA_B2_REV_ID))
-	{
-		#if DBG
-		if(LanceDbg)
-		{
-			DbgPrint("CSR0_MISS on Rx: Reset sequence initiated. \n");
-		}
-		#endif
-
-		if(!(Adapter->OpFlags & RESET_IN_PROGRESS))
-		{
-			Adapter->OpFlags &= ~(STOP_SET);
-		}
-	}	
 
 	/* Check for receive interrupts.	*/
 	if (Csr0Value & (LANCE_CSR0_RINT | LANCE_CSR0_MISS))
@@ -529,7 +484,7 @@ Return Value:
 					DbgPrint("LanceReceiveInterrupt: No rx descriptors to process.\n");
 				#endif
 				/* Clear interrupt source #2 */
-				LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, (LANCE_CSR0_RINT | LANCE_CSR0_MISS));
+				LanceWriteCsr(Adapter, LANCE_CSR0, (LANCE_CSR0_RINT | LANCE_CSR0_MISS));
 				/* Check status after clearing int */
 				if (ReceiveStatus & OWN)
 					break;	/* The only way out of this 'while' loop */
@@ -558,7 +513,7 @@ Return Value:
 					if (LanceRxDbg)
 						DbgPrint("LanceReceiveInterrupt: Skipping this descriptor. Rx status = %lx\n", ReceiveStatus);
 				#endif
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 				*CurrRMDFlags = OWN;
 #endif
 				goto SkipIndication;	/* *YUK* */
@@ -574,7 +529,7 @@ Return Value:
 					DbgPrint("LanceReceiveInterrupt: Packet too large, length %d\n", PacketSize);
 				#endif
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 				*CurrRMDFlags = OWN;
 #endif
 				goto SkipIndication;	/* *YUK* */
@@ -582,7 +537,7 @@ Return Value:
 /*
 	MJ modified to check Multi-Rx.
 */
-#ifndef NDIS40_MINIPORT
+#ifndef NDIS50_MINIPORT
 			LookAheadSize = PacketSize;
 #endif
 			PacketVa = (PVOID)(Adapter->ReceiveBufferPointer +
@@ -611,7 +566,7 @@ Return Value:
 /*
 	MJ modified to check Multi-Rx.
 */
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 		/* [Insert multi-rx code here.] */
 
@@ -630,15 +585,8 @@ Return Value:
 
 //			NDIS_SET_PACKET_TIME_RECEIVED(Adapter->pNdisPacket[CurrentDescriptorIndex],SystemTime);
 
-		/* 4. Call NdisFlushBuffer and NdisMUpdateSharedMemory to ensure data */
-		/*    integrity. UPDATE: Both calls map to NULL in NDIS.H */
-			NdisFlushBuffer (Adapter->pNdisBuffer[CurrentDescriptorIndex], FALSE);
-			NdisMUpdateSharedMemory (Adapter->LanceMiniportHandle,
-									PacketSize,
-									PacketVa,
-									Adapter->ReceiveBufferPointerPhysical +
-									(CurrentDescriptorIndex	* RECEIVE_BUFFER_SIZE)
-									);
+		/* 4. NdisFlushBuffer and NdisMUpdateSharedMemory are no-ops in NDIS 5.x;
+		 *    omitted for WDK 7600 compatibility. */
 
 		/* 5. Place packet pointer into the packet array & increment the packet array index. */
 			BufArray[PktIndex] = Adapter->pNdisBuffer[CurrentDescriptorIndex];
@@ -647,7 +595,7 @@ Return Value:
 
 		/* 7. Repeat 1 thru 6 for all received packets. */
 
-#else	/* *NOT* NDIS40_MINIPORT */
+#else	/* *NOT* NDIS50_MINIPORT */
 
 			Buffer.Next = NULL;
 			Buffer.Size = 0;
@@ -658,14 +606,8 @@ Return Value:
 			Buffer.ByteCount = PacketSize;
 			Buffer.ByteOffset = 0;
 
-			NdisFlushBuffer (&Buffer, FALSE);
-
-			NdisMUpdateSharedMemory (Adapter->LanceMiniportHandle,
-									PacketSize,
-									PacketVa,
-									Adapter->ReceiveBufferPointerPhysical +
-									(CurrentDescriptorIndex	* RECEIVE_BUFFER_SIZE)
-									);
+			/* NdisFlushBuffer and NdisMUpdateSharedMemory are no-ops in NDIS 5.x;
+			 * omitted for WDK 7600 compatibility. */
 
 			/* Indicate a packet is received and available	*/
 
@@ -703,7 +645,7 @@ Return Value:
 
 				IndicatingPacket = TRUE;
 			}
-#endif	/* NDIS40_MINIPORT */
+#endif	/* NDIS50_MINIPORT */
 
 SkipIndication:
 
@@ -721,7 +663,7 @@ SkipIndication:
 /*
 	MJ modified to check Multi-Rx
 */
-#ifndef NDIS40_MINIPORT
+#ifndef NDIS50_MINIPORT
 			*CurrRMDFlags = OWN;
 #endif
 
@@ -786,7 +728,7 @@ SkipIndication:
 /*
 	MJ modified to check Multi_Rx
 */
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 		if (IndicatingPacket)
 		{
 			/* 8. Call NdisMIndicateReceivePacket() with a pointer to the packet array */
@@ -814,14 +756,14 @@ SkipIndication:
 //			NdisMEthIndicateReceiveComplete(Adapter->LanceMiniportHandle);
 		}
 
-#else	/* *NOT* NDIS40_MINIPORT */
+#else	/* *NOT* NDIS50_MINIPORT */
 
 		/* For receiving packet, tell upper layer the job done	*/
 		if (IndicatingPacket)
 		{
 			NdisMEthIndicateReceiveComplete(Adapter->LanceMiniportHandle);
 		}
-#endif	/* NDIS40_MINIPORT */
+#endif	/* NDIS50_MINIPORT */
 	}	/* END if (...) [Check for receive interrupts.]	*/
 
 /****************************************************************************
@@ -830,12 +772,12 @@ SkipIndication:
 
 	if (Csr0Value & LANCE_CSR0_TINT)
 	{
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 		/* Update stats for all completed transmit descriptors. */
 		XmitComplete (Adapter);
 
-#else /* *NOT* NDIS40_MINIPORT */
+#else /* *NOT* NDIS50_MINIPORT */
 
 /* According to the NDIS 4.0 spec, this call is not used or necessary */
 /* when the send routine returns NDIS_STATUS_SUCCESS, which it does in all cases */
@@ -843,7 +785,7 @@ SkipIndication:
 
 		NdisMSendResourcesAvailable(Adapter->LanceMiniportHandle);
 
-#endif /* NDIS40_MINIPORT */
+#endif /* NDIS50_MINIPORT */
 
 		/* Clear no-reset flag	*/
 		Adapter->OpFlags &= ~RESET_PROHIBITED;
@@ -855,7 +797,7 @@ SkipIndication:
 		++Adapter->DmiSpecific[DMI_CSR0_ERR];		
 		
 		/* Clear interrupt source #1 */
-		LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0,
+		LanceWriteCsr(Adapter, LANCE_CSR0,
 			(LANCE_CSR0_MERR | LANCE_CSR0_BABL | LANCE_CSR0_CERR | LANCE_CSR0_MISS));
 		#if DBG
 		if (LanceDbg)
@@ -903,12 +845,9 @@ SkipIndication:
 	{
 		case PCNET_PCI3:
 		case PCNET_PCI2_B2:
-		case PCNET_ISA_PLUS_PLUS:
 			break;
 
 		case LANCE:
-		case PCNET_ISA:
-		case PCNET_ISA_PLUS:
 		case PCNET_PCI1:
 		case PCNET_PCI2_A4:
 
@@ -936,7 +875,7 @@ SkipIndication:
 
 				/* Start Lance, but do not enable interrupts as	*/
 				/* interrupts will be enabled at the end of the DPC. */
-//				LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, LANCE_CSR0_START);
+//				LanceWriteCsr(Adapter, LANCE_CSR0, LANCE_CSR0_START);
 
 				/* Clear the flags and return	*/
 //				Adapter->OpFlags &= ~RESET_IN_PROGRESS;
@@ -959,7 +898,7 @@ SkipIndication:
 	#endif
 }
 
-#ifdef	NDIS40_MINIPORT
+#ifdef	NDIS50_MINIPORT
 STATIC
 VOID
 XmitComplete (
@@ -1055,7 +994,7 @@ USHORT	dbgCount=0;
 
 			if (TransmitError & LANCE_TRANSMIT_LCAR_ERROR)
 			{
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 #ifdef _FAILOVER
 	if ((ActiveAdapter == PRI)&&(Adapter->RedundantMode == 1))
@@ -1159,9 +1098,9 @@ DoNotIndicateCableDisconnect:
 
 	/* Disable TX interrupts here */
 // MJ : Disabled tx watermark
-//	LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR3, &Data);
+//	LanceReadCsr(Adapter, LANCE_CSR3, &Data);
 //	Data |= LANCE_CSR3_TINTM;
-//	LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR3, Data);
+//	LanceWriteCsr(Adapter, LANCE_CSR3, Data);
 
 //MJ modified | to &
 	if (Adapter->OpFlags & TX_RESOURCES)
@@ -1175,7 +1114,7 @@ DoNotIndicateCableDisconnect:
 	}
 
 	/* Clear interrupt source #3 */
-	LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, LANCE_CSR0_TINT);
+	LanceWriteCsr(Adapter, LANCE_CSR0, LANCE_CSR0_TINT);
 
 #if DBG
 	if (LanceSendDbg)
@@ -1286,4 +1225,4 @@ LanceReturnPacket(
 	#endif
 }
 
-#endif	/* NDIS40_MINIPORT */
+#endif	/* NDIS50_MINIPORT */

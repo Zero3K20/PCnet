@@ -35,7 +35,6 @@ Revision History:
 --*/
 
 #include <ndis.h>
-#include <efilter.h>
 #include <lancehrd.h>
 #include <lancesft.h>
 
@@ -171,13 +170,13 @@ Return Value:
    UCHAR VendorId[4];
    NDIS_OID MaskOid;
 
-   static UCHAR VendorDescription[] = "IBM 10/100 Mbps Ethernet TX MCA Adapter";
+   static UCHAR VendorDescription[] = "AMD PCnet Ethernet Adapter";
    static NDIS_OID LanceGlobalSupportedOids[] = {
                            OID_GEN_SUPPORTED_LIST,
                            OID_GEN_HARDWARE_STATUS,
                            OID_GEN_MEDIA_SUPPORTED,
                            OID_GEN_MEDIA_IN_USE,
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
                            OID_GEN_MEDIA_CONNECT_STATUS,
 									OID_GEN_MAXIMUM_SEND_PACKETS,
 									OID_GEN_VENDOR_DRIVER_VERSION,
@@ -197,6 +196,7 @@ Return Value:
                            OID_GEN_CURRENT_LOOKAHEAD,
                            OID_GEN_DRIVER_VERSION,
                            OID_GEN_MAXIMUM_TOTAL_SIZE,
+                           OID_GEN_PHYSICAL_MEDIUM,
 
 
                            OID_GEN_XMIT_OK,
@@ -302,7 +302,7 @@ Return Value:
 
                break;
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 				case OID_GEN_MEDIA_CONNECT_STATUS:
 					if (LanceReadLink (Adapter->MappedIoBaseAddress,
@@ -386,9 +386,15 @@ Return Value:
                GenericUlong = Adapter->CurrentPacketFilter;
                break;
 
+            case OID_GEN_PHYSICAL_MEDIUM:
+
+               /* NdisPhysicalMediumUnspecified (0) = standard wired 802.3 Ethernet.
+                * Required by Windows Vista/7 to bind TCP/IP to the adapter. */
+               GenericUlong = 0;
+               break;
+
             default:
 
-               ASSERT(FALSE);
                Status = NDIS_STATUS_NOT_SUPPORTED;
                break;
 
@@ -429,7 +435,6 @@ Return Value:
                break;
             default:
 
-               ASSERT(FALSE);
                Status = NDIS_STATUS_NOT_SUPPORTED;
                break;
          }
@@ -458,7 +463,6 @@ Return Value:
 
             default:
 
-               ASSERT(FALSE);
                Status = NDIS_STATUS_NOT_SUPPORTED;
                break;
 
@@ -514,7 +518,6 @@ Return Value:
                break;
             default:
 
-               ASSERT(FALSE);
                Status = NDIS_STATUS_NOT_SUPPORTED;
                break;
 
@@ -549,7 +552,6 @@ Return Value:
 
       default:
 
-         ASSERT(FALSE);
          Status = NDIS_STATUS_NOT_SUPPORTED;
          break;
    }
@@ -883,7 +885,6 @@ Return Value:
    //
    // Local Pointer to the Initialization Block.
    //
-   PLANCE_INIT_BLOCK InitializationBlock;
    PLANCE_INIT_BLOCK_HI InitializationBlockHi;
 
    #if DBG
@@ -894,14 +895,7 @@ Return Value:
       }
    #endif
 
-   if((Adapter->BoardFound == PCI_DEV) ||
-     (Adapter->BoardFound == MCA_DEV)) {
-
-      InitializationBlockHi = (PLANCE_INIT_BLOCK_HI)Adapter->InitializationBlock;
-   }
-   else {
-      InitializationBlock = (PLANCE_INIT_BLOCK)Adapter->InitializationBlock;
-   }
+   InitializationBlockHi = (PLANCE_INIT_BLOCK_HI)Adapter->InitializationBlock;
 
    if (Adapter->CurrentPacketFilter & NDIS_PACKET_TYPE_PROMISCUOUS) {
 
@@ -910,38 +904,17 @@ Return Value:
             DbgPrint("ChangeClass: Go promiscious.\n");
       #endif
 
-      if((Adapter->BoardFound == PCI_DEV) ||
-      (Adapter->BoardFound == MCA_DEV)) {
-
-         InitializationBlockHi->Mode = LANCE_PROMISCIOUS_MODE;
-         if(Adapter->tp)
-            InitializationBlockHi->Mode |= 0x1080;
-      }
-      else
-      {
-         InitializationBlock->Mode = LANCE_PROMISCIOUS_MODE;
-         if(Adapter->tp)
-            InitializationBlock->Mode |= 0x1080;
-      }
+      InitializationBlockHi->Mode = LANCE_PROMISCIOUS_MODE;
+      if(Adapter->tp)
+         InitializationBlockHi->Mode |= 0x1080;
 
    } else {
 
       USHORT i;
 
-      if((Adapter->BoardFound == PCI_DEV) ||
-      (Adapter->BoardFound == MCA_DEV)) {
-
-         InitializationBlockHi->Mode = LANCE_NORMAL_MODE;
-         if(Adapter->tp)
-            InitializationBlockHi->Mode |= 0x1080;
-
-      }
-      else
-      {
-         InitializationBlock->Mode = LANCE_NORMAL_MODE;
-         if(Adapter->tp)
-            InitializationBlock->Mode |= 0x1080;
-      }
+      InitializationBlockHi->Mode = LANCE_NORMAL_MODE;
+      if(Adapter->tp)
+         InitializationBlockHi->Mode |= 0x1080;
 
       if (Adapter->CurrentPacketFilter & NDIS_PACKET_TYPE_ALL_MULTICAST) {
 
@@ -950,17 +923,8 @@ Return Value:
                DbgPrint("ChangeClass: Receive all multicast.\n");
          #endif
 
-         if((Adapter->BoardFound == PCI_DEV) ||
-         (Adapter->BoardFound == MCA_DEV)) {
-
-            for (i=0; i<8; i++)
-               InitializationBlockHi->LogicalAddressFilter[i] = 0xFF;
-         }
-         else
-         {
-            for (i=0; i<8; i++)
-               InitializationBlock->LogicalAddressFilter[i] = 0xFF;
-         }
+         for (i=0; i<8; i++)
+            InitializationBlockHi->LogicalAddressFilter[i] = 0xFF;
 
       } else if (Adapter->CurrentPacketFilter & NDIS_PACKET_TYPE_MULTICAST) {
 
@@ -1014,7 +978,6 @@ Return Value:
    //
    // Local Pointer to the Initialization Block.
    //
-   PLANCE_INIT_BLOCK InitializationBlock;
    PLANCE_INIT_BLOCK_HI InitializationBlockHi;
 
    #if DBG
@@ -1022,18 +985,9 @@ Return Value:
          DbgPrint("==>LanceChangeAddress\n");
    #endif
 
-   if((Adapter->BoardFound == PCI_DEV) ||
-   (Adapter->BoardFound == MCA_DEV)) {
-
-      InitializationBlockHi = (PLANCE_INIT_BLOCK_HI)Adapter->InitializationBlock;
-		for (i=0; i<8; i++)
+   InitializationBlockHi = (PLANCE_INIT_BLOCK_HI)Adapter->InitializationBlock;
+	for (i=0; i<8; i++)
 	      InitializationBlockHi->LogicalAddressFilter[i] = 0;
-   }
-   else {
-      InitializationBlock = (PLANCE_INIT_BLOCK)Adapter->InitializationBlock;
-		for (i=0; i<8; i++)
-	      InitializationBlock->LogicalAddressFilter[i] = 0;
-   }
 
    //
    // Loop through, copying the addresses into the CAM.
@@ -1063,17 +1017,8 @@ Return Value:
       //
       FilterByte = HashCode >> 3;
 
-      if((Adapter->BoardFound == PCI_DEV) ||
-      (Adapter->BoardFound == MCA_DEV)) {
-
-         InitializationBlockHi->LogicalAddressFilter[FilterByte] |=
-                  (1 << (HashCode & 0x07));
-      }
-      else
-      {
-         InitializationBlock->LogicalAddressFilter[FilterByte] |=
-                  (1 << (HashCode & 0x07));
-      }
+      InitializationBlockHi->LogicalAddressFilter[FilterByte] |=
+               (1 << (HashCode & 0x07));
 
    }
 
@@ -1372,28 +1317,7 @@ Return Value:
 			break;
 
 		case DMI_OPCODE_GET_BOARD_FOUND:
-			switch (Adapter->BoardFound)
-			{
-				case PCI_DEV:
-					ReqBlock->Value = DMI_PCI_BOARD;
-					break;
-
-				case PLUG_PLAY_DEV:
-					ReqBlock->Value = DMI_PLUG_PLAY_BOARD;
-					break;
-
-				case LOCAL_DEV:
-					ReqBlock->Value = DMI_LOCAL_BOARD;
-					break;				
-					
-				case MCA_DEV:
-					ReqBlock->Value = DMI_PCI_BOARD; //MCA board is a bridge to the PCI chip
-					break;       
-					
-				default:
-					ReqBlock->Value = DMI_NO_BOARD;
-					break;
-			}
+			ReqBlock->Value = DMI_PCI_BOARD;
 			break;
 
 		case DMI_OPCODE_GET_IO_BASE_ADDR:
@@ -1409,19 +1333,19 @@ Return Value:
 			break;
 
 		case DMI_OPCODE_GET_CSR_VALUE:
-			ReqBlock->Status = LancePortAccess (Adapter, &ReqBlock->Value, CSR_READ);
+			ReqBlock->Status = (WORD)LancePortAccess (Adapter, &ReqBlock->Value, CSR_READ);
 			break;
 
 		case DMI_OPCODE_GET_BCR_VALUE:
-			ReqBlock->Status = LancePortAccess (Adapter, &ReqBlock->Value, BCR_READ);
+			ReqBlock->Status = (WORD)LancePortAccess (Adapter, &ReqBlock->Value, BCR_READ);
 			break;
 
 		case DMI_OPCODE_SET_CSR_VALUE:
-			ReqBlock->Status = LancePortAccess (Adapter, &ReqBlock->Value, CSR_WRITE);
+			ReqBlock->Status = (WORD)LancePortAccess (Adapter, &ReqBlock->Value, CSR_WRITE);
 			break;
 
 		case DMI_OPCODE_SET_BCR_VALUE:
-			ReqBlock->Status = LancePortAccess (Adapter, &ReqBlock->Value, BCR_WRITE);
+			ReqBlock->Status = (WORD)LancePortAccess (Adapter, &ReqBlock->Value, BCR_WRITE);
 			break;
 
 		case DMI_OPCODE_GET_CSR_NUMBER:
@@ -1545,7 +1469,7 @@ Return Value:
          break;
 
 		case DMI_OPCODE_GET_RAM_SIZE:
-			LANCE_READ_BCR (Adapter->MappedIoBaseAddress, 25, &Data);
+			LanceReadBcr(Adapter, 25, &Data);
 			ReqBlock->Value = ((USHORT)Data << 8);
 			break;
 
@@ -1569,11 +1493,11 @@ INT	RetCode		= LANCE_PORT_SUCCESS;
 				switch (AccessType)
 				{
 					case PORT_READ:
-						LANCE_READ_CSR (Adapter->MappedIoBaseAddress, Adapter->CsrNum, pData);
+						LanceReadCsr(Adapter, Adapter->CsrNum, pData);
 						break;
 
 					case PORT_WRITE:
-						LANCE_WRITE_CSR (Adapter->MappedIoBaseAddress, Adapter->CsrNum, *pData);
+						LanceWriteCsr(Adapter, Adapter->CsrNum, *pData);
 						break;
 
 					default:
@@ -1585,11 +1509,11 @@ INT	RetCode		= LANCE_PORT_SUCCESS;
 				switch (AccessType)
 				{
 					case PORT_READ:
-						LANCE_READ_BCR (Adapter->MappedIoBaseAddress, Adapter->BcrNum, pData);
+						LanceReadBcr(Adapter, Adapter->BcrNum, pData);
 						break;
 
 					case PORT_WRITE:
-						LANCE_WRITE_BCR (Adapter->MappedIoBaseAddress, Adapter->BcrNum, *pData);
+						LanceWriteBcr(Adapter, Adapter->BcrNum, *pData);
 						break;
 
 					default:

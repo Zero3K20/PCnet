@@ -45,6 +45,35 @@ IO 0x1C00
 DMA 5
 IRQ 10
 
+INSTALL ON WINDOWS NT 4.0:
+Use OEMSETUP.INF with the "Have Disk" option in the Network control panel.
+
+INSTALL ON WINDOWS 2000 / XP / SERVER 2003 AND LATER:
+Windows 2000 and later do not enumerate MCA bus devices automatically.
+You must install the driver manually using the new pcntn4m.inf file:
+
+1. Open Network Connections (or Network and Dial-up Connections).
+2. Select "Create a new connection" (or Advanced -> Add Network
+   Component), then choose Adapter -> Have Disk.
+   Alternatively, use the Add Hardware Wizard and choose to install
+   hardware manually, selecting "Network adapters" as the category.
+3. Browse to the driver folder and select pcntn4m.inf.
+4. Select "IBM 10/100 Ethernet MCA Adapter (San Remo)" and click OK.
+
+The driver reads the adapter resources (IO address, IRQ, DMA channel)
+from the registry. Default values are:
+  IO Base Address : 0x1C00
+  IRQ             : 10
+  DMA Channel     : 5
+
+These defaults match the recommended MCA resource settings above.
+If you configured the adapter to use different resources via the PS/2
+reference disk, update the registry keys under:
+  HKLM\SYSTEM\CurrentControlSet\Services\PCNTN4M\Parameters
+    IOAddress   (DWORD, hex)
+    Interrupt   (DWORD, decimal)
+    DmaChannel  (DWORD, decimal)
+
 TESTING NOTES:
 Model 9577 Bermuda planar does not work with W95 or NT drivers.  The AMD chipset 
 would not start during my tests.  You are welcome to try on your machine.

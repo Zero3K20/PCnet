@@ -1,0 +1,136 @@
+; pcntn5m.inf
+; Installation file for the IBM 10/100 Ethernet MCA Adapter (San Remo)
+; Supports Windows 2000, Windows XP, Windows Server 2003, Windows 7, and later.
+;
+; Usage: Install via Network Connections -> Add -> Adapter -> Have Disk,
+;        or via Add Hardware Wizard -> Install hardware manually.
+;
+; Recommended resource settings:
+;   IO Base Address : 0x1C00
+;   IRQ             : 10
+;   DMA Channel     : 5
+
+[Version]
+Signature   = "$Windows NT$"
+Class       = Net
+ClassGUID   = {4d36e972-e325-11ce-bfc1-08002be10318}
+Provider    = %IBM%
+DriverVer   = 02/14/2024,5.0.0.0
+
+[Manufacturer]
+%IBM% = IBM,NT,NTx86
+
+; Windows 2000 (NT 5.0) uses the plain .NT section.
+[IBM.NT]
+%PCNTN5M.DeviceDesc%       = PCNTN5M.ndi,     Root\PCNTN5M
+%PCNTN5M.DeviceDesc%       = PCNTN5M.ndi,     *PCNTN5M
+; PCI\VEN_1022 = AMD
+; NOTE: VirtualBox emulates ALL PCnet variants (PCnet-PCI II and PCnet-FAST III)
+;       using PCI device ID 0x2000; the actual chip type is identified via CSR88.
+%PCNTN5M_PCI0.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2000  ; Am79C970/970A/971/973 (VirtualBox uses this for all PCnet types)
+%PCNTN5M_PCI1.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2001  ; Am79C970A PCnet-PCI II (real hardware)
+%PCNTN5M_PCI3.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2625  ; Am79C973 PCnet-FAST III (real hardware, Rev 0)
+%PCNTN5M_PCI3.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2626  ; Am79C973 PCnet-FAST III (real hardware, Rev 10h)
+
+; Windows XP, Server 2003, Vista, 7 (x86) use the .NTx86 section.
+[IBM.NTx86]
+%PCNTN5M.DeviceDesc%       = PCNTN5M.ndi,     Root\PCNTN5M
+%PCNTN5M.DeviceDesc%       = PCNTN5M.ndi,     *PCNTN5M
+; PCI\VEN_1022 = AMD
+; NOTE: VirtualBox emulates ALL PCnet variants (PCnet-PCI II and PCnet-FAST III)
+;       using PCI device ID 0x2000; the actual chip type is identified via CSR88.
+%PCNTN5M_PCI0.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2000  ; Am79C970/970A/971/973 (VirtualBox uses this for all PCnet types)
+%PCNTN5M_PCI1.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2001  ; Am79C970A PCnet-PCI II (real hardware)
+%PCNTN5M_PCI3.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2625  ; Am79C973 PCnet-FAST III (real hardware, Rev 0)
+%PCNTN5M_PCI3.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2626  ; Am79C973 PCnet-FAST III (real hardware, Rev 10h)
+
+[PCNTN5M.ndi]
+Characteristics = 0x4  ; NCF_PHYSICAL
+BusType         = 1    ; ISA
+AddReg          = PCNTN5M.ndi.reg
+CopyFiles       = PCNTN5M.CopyFiles
+
+[PCNTN5M.ndi.Services]
+AddService = PCNTN5M, 2, PCNTN5M.Service, PCNTN5M.EventLog
+
+[PCNTN5M.ndi.reg]
+HKR, Ndi,              Service,    0, "PCNTN5M"
+HKR, Ndi\Interfaces,   UpperRange, 0, "ndis5"
+HKR, Ndi\Interfaces,   LowerRange, 0, "ethernet"
+
+; Vista/7 NDIS classification — required for TCP/IP to bind correctly.
+; FLG_ADDREG_NOCLOBBER (0x2) is set so these are written on first install but
+; NOT overwritten on driver updates; this prevents NDIS from triggering a full
+; interface rebind during update (which causes a 60-second timeout on Windows 7).
+HKR, Ndi, *IfType,            0x00010003, 6   ; IF_TYPE_ETHERNET_CSMACD, no-clobber
+HKR, Ndi, *MediaType,         0x00010003, 0   ; NdisMedium802_3, no-clobber
+HKR, Ndi, *PhysicalMediaType, 0x00010003, 0   ; NdisPhysicalMediumUnspecified, no-clobber
+
+; Default hardware resource settings.
+; IOAddress: MCA I/O base address (default 0x1C00).
+; Interrupt: IRQ line used by the adapter (default 10).
+; DmaChannel: DMA channel (default 5).
+; BUS_TO_SCAN: Must be "MCA" to enable the San Remo device scan.
+HKR, ,  IOAddress,   0x00010001, 0x00001C00
+HKR, ,  Interrupt,   0x00010001, 10
+HKR, ,  DmaChannel,  0x00010001, 5
+HKR, ,  BUS_TO_SCAN, 0x00000000, "MCA"
+
+[PCNTN5M_PCI.ndi]
+Characteristics = 0x4  ; NCF_PHYSICAL
+BusType         = 5    ; PCI
+AddReg          = PCNTN5M_PCI.ndi.reg
+CopyFiles       = PCNTN5M.CopyFiles
+
+[PCNTN5M_PCI.ndi.Services]
+AddService = PCNTN5M, 2, PCNTN5M.Service, PCNTN5M.EventLog
+
+[PCNTN5M_PCI.ndi.reg]
+HKR, Ndi,              Service,    0, "PCNTN5M"
+HKR, Ndi\Interfaces,   UpperRange, 0, "ndis5"
+HKR, Ndi\Interfaces,   LowerRange, 0, "ethernet"
+HKR, Ndi, *IfType,            0x00010003, 6
+HKR, Ndi, *MediaType,         0x00010003, 0
+HKR, Ndi, *PhysicalMediaType, 0x00010003, 0
+; BusType=5 tells the driver this is a PCI device (direct register access, no ASIC bridge)
+HKR, ,  BusType, 0x00010001, 5
+
+[PCNTN5M.Service]
+DisplayName    = %PCNTN5M.Service.DispName%
+ServiceType    = 1  ; SERVICE_KERNEL_DRIVER
+StartType      = 3  ; SERVICE_DEMAND_START
+ErrorControl   = 1  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\pcntn5m.sys
+LoadOrderGroup = NDIS
+
+[PCNTN5M.EventLog]
+AddReg = PCNTN5M.EventLog.reg
+
+[PCNTN5M.EventLog.reg]
+HKR,, EventMessageFile, 0x00020000, "%%SystemRoot%%\System32\netevent.dll"
+HKR,, TypesSupported,   0x00010001, 7
+
+[PCNTN5M.CopyFiles]
+pcntn5m.sys
+
+[DestinationDirs]
+PCNTN5M.CopyFiles = 12   ; %windir%\system32\drivers
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+pcntn5m.sys = 1
+
+[Strings]
+IBM                      = "IBM"
+PCNTN5M.DeviceDesc       = "IBM 10/100 Ethernet MCA Adapter (San Remo)"
+PCNTN5M.Service.DispName = "IBM 10/100 Ethernet MCA Miniport"
+DiskName                 = "IBM San Remo Driver Disk"
+; DEV_2000 is used by VirtualBox for all PCnet variants (PCnet-PCI II and PCnet-FAST III);
+; the actual chip (Am79C970A / Am79C973 / etc.) is detected via CSR88 by the driver.
+PCNTN5M_PCI0.DeviceDesc  = "AMD PCnet Ethernet Adapter"
+; DEV_2001 is the correct PCI ID for real Am79C970A (PCnet-PCI II) hardware.
+PCNTN5M_PCI1.DeviceDesc  = "AMD PCnet-PCI II Ethernet Adapter (Am79C970A)"
+; DEV_2625 / DEV_2626 are the PCI IDs for real Am79C973 (PCnet-FAST III) hardware.
+PCNTN5M_PCI3.DeviceDesc  = "AMD PCnet-FAST III Ethernet Adapter (Am79C973)"

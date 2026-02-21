@@ -1,10 +1,10 @@
 USE_PDB=1
-TARGETNAME=PCNTN4M
-TARGETPATH=$(BASEDIR)\lib
+TARGETNAME=pcntn5m
+TARGETPATH=obj
 TARGETTYPE=DRIVER
 
-TARGETLIBS=$(BASEDIR)\lib\*\$(DDKBUILDENV)\ndis.lib
-C_DEFINES=$(C_DEFINES) -DNDIS_MINIPORT_DRIVER -DNDIS40_MINIPORT
+TARGETLIBS=$(DDK_LIB_PATH)\ndis.lib
+C_DEFINES=$(C_DEFINES) -DNDIS_MINIPORT_DRIVER -DNDIS50_MINIPORT
 
 #INCLUDES=..\inc;..\..\inc
 INCLUDES=C:\DDK\src\network\inc;C:\DDK\inc
@@ -14,7 +14,7 @@ SOURCES=lance.c \
         send.c \
         request.c \
         alloc.c \
-        Pcntn3.rc \
+        Pcntn5.rc \
         
         
 RELATIVE_DEPTH=..\..
