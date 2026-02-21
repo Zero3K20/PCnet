@@ -113,9 +113,6 @@ Return Value:
 	UCHAR							CurrentDescriptorIndex;
 	UCHAR							TransmitStatus;
 	USHORT 						TransmitError;
-	CHAR							Destination[ETH_LENGTH_OF_ADDRESS];
-	UINT							AddressLength;
-	NDIS_BUFFER						Buffer;
 	PNDIS_PACKET_OOB_DATA			OobData;
 	UINT						oldNumPkts = NumberOfPackets;
 #ifdef _FAILOVER
@@ -370,32 +367,6 @@ Return Value:
 		}
 	}
 
-		/* Save packet information. */
-		/* Copy address to buffer. */
-
-		LanceMovePacket(Adapter,
-			*PacketArray,
-			ETH_LENGTH_OF_ADDRESS,
-			Destination,
-			&AddressLength,
-			TRUE
-			);
-
-		ASSERT(AddressLength == ETH_LENGTH_OF_ADDRESS);
-
-		/* Get packet flavor */
-
-		if (ETH_IS_MULTICAST(Destination))
-		{
-			Adapter->TransmitPacketType[CurrentDescriptorIndex] = 
-			(ETH_IS_BROADCAST(Destination)) ? LANCE_BROADCAST : LANCE_MULTICAST;
-
-		}
-		else
-		{
-			Adapter->TransmitPacketType[CurrentDescriptorIndex] = LANCE_DIRECTED;
-		}
-
 		/* Now fill in the adapter buffer with the data	*/
 		/* from the users buffers. */
 
@@ -419,17 +390,14 @@ Return Value:
 					TRUE
 					);
 
-		Buffer.Next = NULL;
-		Buffer.Size = 0;
-		Buffer.MdlFlags = 0;
-		Buffer.Process = 0;
-		Buffer.MappedSystemVa = CurrentDestination;
-		Buffer.StartVa = CurrentDestination;
-		Buffer.ByteCount = TotalPacketSize;
-		Buffer.ByteOffset = 0;
-		/* NdisFlushBuffer and NdisMUpdateSharedMemory are no-ops in NDIS 5.x;
-		 * omitted for WDK 7600 compatibility. */
-								
+		/* Classify packet type from destination address in DMA buffer */
+		if (ETH_IS_BROADCAST(CurrentDestination))
+			Adapter->TransmitPacketType[CurrentDescriptorIndex] = LANCE_BROADCAST;
+		else if (ETH_IS_MULTICAST(CurrentDestination))
+			Adapter->TransmitPacketType[CurrentDescriptorIndex] = LANCE_MULTICAST;
+		else
+			Adapter->TransmitPacketType[CurrentDescriptorIndex] = LANCE_DIRECTED;
+
 		if (Adapter->SwStyle == SW_STYLE_2)
 		{
 			CurrentDescriptorHi->LanceBufferPhysicalLow =
@@ -447,14 +415,8 @@ Return Value:
 			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
 			(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE));
 
-			if (TotalDataMoved < LANCE_MIN_PACKET_SIZE)
-			{
-				CurrentDescriptorHi->ByteCount = -LANCE_MIN_PACKET_SIZE;
-			}
-			else
-			{
-				CurrentDescriptorHi->ByteCount = -TotalDataMoved;
-			}
+			/* APAD_XMT is set in CSR4: hardware pads short frames automatically */
+			CurrentDescriptorHi->ByteCount = -TotalDataMoved;
 
 			/* Now change the ownership of the packet to Lance. */
 			/* STP and ENP bits are permanently set as all packets should */
@@ -669,9 +631,6 @@ Return Value:
 	//
 	INT TotalDataMoved = 0;
 
-	CHAR Destination[ETH_LENGTH_OF_ADDRESS];
-	UINT AddressLength;
-	NDIS_BUFFER	Buffer;
 
 #ifdef _FAILOVER
 	PLANCE_ADAPTER CurrentAdapter;
@@ -891,33 +850,6 @@ Return Value:
 		}
 	}
 	//
-	// Save sending packet information.
-	// Copy address to buffer.
-	//
-	LanceMovePacket(Adapter,
-		Packet,
-		ETH_LENGTH_OF_ADDRESS,
-		Destination,
-		&AddressLength,
-		TRUE
-		);
-
-	ASSERT(AddressLength == ETH_LENGTH_OF_ADDRESS);
-
-	//
-	// Save packet type
-	//
-	if (ETH_IS_MULTICAST(Destination))
-	{
-		Adapter->TransmitPacketType[CurrentDescriptorIndex] = 
-		(ETH_IS_BROADCAST(Destination)) ? LANCE_BROADCAST : LANCE_MULTICAST;
-	}
-	else
-	{
-		Adapter->TransmitPacketType[CurrentDescriptorIndex] = LANCE_DIRECTED;
-	}
-
-	//
 	// Now fill in the adapter buffer with the data 
 	// from the users buffers.
 	//
@@ -942,18 +874,14 @@ Return Value:
 				TRUE
 				);
 
-	Buffer.Next = NULL;
-	Buffer.Size = 0;
-	Buffer.MdlFlags = 0;
-	Buffer.Process = 0;
-	Buffer.MappedSystemVa = CurrentDestination;
-	Buffer.StartVa = CurrentDestination;
-	Buffer.ByteCount = TotalPacketSize;
-	Buffer.ByteOffset = 0;
+	// Classify packet type from destination address in DMA buffer
+	if (ETH_IS_BROADCAST(CurrentDestination))
+		Adapter->TransmitPacketType[CurrentDescriptorIndex] = LANCE_BROADCAST;
+	else if (ETH_IS_MULTICAST(CurrentDestination))
+		Adapter->TransmitPacketType[CurrentDescriptorIndex] = LANCE_MULTICAST;
+	else
+		Adapter->TransmitPacketType[CurrentDescriptorIndex] = LANCE_DIRECTED;
 
-	/* NdisFlushBuffer and NdisMUpdateSharedMemory are no-ops in NDIS 5.x;
-	 * omitted for WDK 7600 compatibility. */
-							
 	if (Adapter->SwStyle == SW_STYLE_2)
 	{
 
@@ -972,14 +900,8 @@ Return Value:
 			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
 			(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE));
 
-		if (TotalDataMoved < LANCE_MIN_PACKET_SIZE)
-		{
-			CurrentDescriptorHi->ByteCount = -LANCE_MIN_PACKET_SIZE;
-		}
-		else
-		{
-			CurrentDescriptorHi->ByteCount = -TotalDataMoved;
-		}
+		/* APAD_XMT is set in CSR4: hardware pads short frames automatically */
+		CurrentDescriptorHi->ByteCount = -TotalDataMoved;
 		//
 		// Now change the ownership of the packet to Lance.
 		// STP and ENP bits are permanently set as all packets should
@@ -1140,9 +1062,6 @@ Return Value:
 	UCHAR							CurrentDescriptorIndex;
 	UCHAR							TransmitStatus;
 	USHORT 						TransmitError;
-	CHAR							Destination[ETH_LENGTH_OF_ADDRESS];
-	UINT							AddressLength;
-	NDIS_BUFFER						Buffer;
 	PNDIS_PACKET_OOB_DATA			OobData;
 	UINT						oldNumPkts = NumberOfPackets;
 
@@ -1359,32 +1278,6 @@ Return Value:
 		}
 	}
 
-		/* Save packet information. */
-		/* Copy address to buffer. */
-
-		LanceMovePacket(Adapter,
-			*PacketArray,
-			ETH_LENGTH_OF_ADDRESS,
-			Destination,
-			&AddressLength,
-			TRUE
-			);
-
-		ASSERT(AddressLength == ETH_LENGTH_OF_ADDRESS);
-
-		/* Get packet flavor */
-
-		if (ETH_IS_MULTICAST(Destination))
-		{
-			Adapter->TransmitPacketType[CurrentDescriptorIndex] = 
-			(ETH_IS_BROADCAST(Destination)) ? LANCE_BROADCAST : LANCE_MULTICAST;
-
-		}
-		else
-		{
-			Adapter->TransmitPacketType[CurrentDescriptorIndex] = LANCE_DIRECTED;
-		}
-
 		/* Now fill in the adapter buffer with the data	*/
 		/* from the users buffers. */
 
@@ -1408,17 +1301,14 @@ Return Value:
 					TRUE
 					);
 
-		Buffer.Next = NULL;
-		Buffer.Size = 0;
-		Buffer.MdlFlags = 0;
-		Buffer.Process = 0;
-		Buffer.MappedSystemVa = CurrentDestination;
-		Buffer.StartVa = CurrentDestination;
-		Buffer.ByteCount = TotalPacketSize;
-		Buffer.ByteOffset = 0;
-		/* NdisFlushBuffer and NdisMUpdateSharedMemory are no-ops in NDIS 5.x;
-		 * omitted for WDK 7600 compatibility. */
-								
+		/* Classify packet type from destination address in DMA buffer */
+		if (ETH_IS_BROADCAST(CurrentDestination))
+			Adapter->TransmitPacketType[CurrentDescriptorIndex] = LANCE_BROADCAST;
+		else if (ETH_IS_MULTICAST(CurrentDestination))
+			Adapter->TransmitPacketType[CurrentDescriptorIndex] = LANCE_MULTICAST;
+		else
+			Adapter->TransmitPacketType[CurrentDescriptorIndex] = LANCE_DIRECTED;
+
 		if (Adapter->SwStyle == SW_STYLE_2)
 		{
 			CurrentDescriptorHi->LanceBufferPhysicalLow =
@@ -1436,14 +1326,8 @@ Return Value:
 			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
 			(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE));
 
-			if (TotalDataMoved < LANCE_MIN_PACKET_SIZE)
-			{
-				CurrentDescriptorHi->ByteCount = -LANCE_MIN_PACKET_SIZE;
-			}
-			else
-			{
-				CurrentDescriptorHi->ByteCount = -TotalDataMoved;
-			}
+			/* APAD_XMT is set in CSR4: hardware pads short frames automatically */
+			CurrentDescriptorHi->ByteCount = -TotalDataMoved;
 
 			/* Now change the ownership of the packet to Lance. */
 			/* STP and ENP bits are permanently set as all packets should */

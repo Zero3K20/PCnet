@@ -2321,7 +2321,7 @@ NOTES:
 	/* Global setting for csr4 register	*/
 	LanceReadCsr(Adapter, LANCE_CSR4, &Data);
 
-	Data |= (LANCE_CSR4_AUTOPADTRANSMIT | LANCE_CSR4_DPOLL | 0x0004);
+	Data |= (LANCE_CSR4_AUTOPADTRANSMIT | LANCE_CSR4_DPOLL | LANCE_CSR4_TXSTRTM);
 
 	LanceWriteCsr(Adapter, LANCE_CSR4, Data);
 

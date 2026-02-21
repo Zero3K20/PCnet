@@ -218,6 +218,7 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 /* define csr4 bits: */
 #define LANCE_CSR4_DMAPLUS 0x4000
 #define LANCE_CSR4_AUTOPADTRANSMIT 0x0800
+#define LANCE_CSR4_TXSTRTM 0x0004  /* Mask transmit-start interrupt (from ReactOS/AMD datasheet) */
 #define LANCE_CSR4_DPOLL   0x1000
 #define LANCE_CSR4_TIMER   0x2000
 
