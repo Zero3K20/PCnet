@@ -329,7 +329,7 @@ InitFullDuplexMode(
 	IN PLANCE_ADAPTER Adapter
 );
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 STATIC
 VOID
@@ -377,7 +377,7 @@ LanceFreeRxPacketPool(
 	IN PLANCE_ADAPTER Adapter
 );
 
-#endif /* NDIS40_MINIPORT */
+#endif /* NDIS50_MINIPORT */
 
 NTSTATUS
 DriverEntry(
@@ -860,7 +860,7 @@ Return Value:
 		DbgPrint("FDUP = %x\n", Adapter->FullDuplex);
 #endif
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 	/***********************************
 	 *	Get the External Phy Mode keyword *
@@ -883,7 +883,7 @@ Return Value:
 #endif
 
 	}
-#endif /* NDIS40_MINIPORT */
+#endif /* NDIS50_MINIPORT */
 
 	//
 	// Get the Bus Timer keyword
@@ -1150,7 +1150,7 @@ Return Value:
 		LanceShutdownHandler
 	);
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 	NdisMInitializeTimer(
 		&(Adapter->CableTimer),
@@ -1542,7 +1542,7 @@ Return Value:
 					Adapter->TransmitDescriptorRingPhysical));
 	}
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 	if (!(LanceInitRxPacketPool(Adapter)))
 	{
 #if DBG
@@ -2024,7 +2024,7 @@ Return Value:
 --*/
 
 {
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 	NDIS_STATUS Status;
 	NDIS_MCA_POS_DATA McaData;
 	UINT slot;
@@ -2038,7 +2038,7 @@ Return Value:
 
 #endif
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 	//
 	// On Windows NT 4.0 with MCA bus: read POS codes to discover resources.
 	// On Windows 2000 and later MCA bus is not supported by the OS, so
@@ -2091,7 +2091,7 @@ Return Value:
 	// registry / INF file and have already been read into the Adapter structure
 	// by LanceInitialize().
 	//
-#endif /* NDIS40_MINIPORT */
+#endif /* NDIS50_MINIPORT */
 
 	//
 	// Set chip and bus types
@@ -2760,7 +2760,7 @@ NOTES:
 			ReceiveDescriptorRingHi->BufferSize = -RECEIVE_BUFFER_SIZE;
 			ReceiveDescriptorRingHi->ByteCount = 0;
 			ReceiveDescriptorRingHi->LanceRMDReserved1 = 0;
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 			/* Write the address of this descriptor's LanceRMDFlags member */
 			/* to the MiniportReserved field of the relative NDIS packet */
 			* ((UCHAR**)&(Adapter->pNdisPacket[i]->MiniportReserved[0])) = &(ReceiveDescriptorRingHi->LanceRMDFlags);
@@ -2775,7 +2775,7 @@ NOTES:
 
 	Adapter->OpFlags &= RESET_MASK;
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 	Adapter->TxBufsUsed = 0;	/* Reset outstanding tx buffer count */
 #endif
 
@@ -3267,7 +3267,7 @@ Return Value:
 
 	//	NdisFreeSpinLock(&Adapter->Lock);
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 	LanceFreeRxPacketPool(Adapter);
 #endif
 //
@@ -3554,7 +3554,7 @@ Return Value:
 #endif
 }
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 STATIC
 VOID
@@ -4152,7 +4152,7 @@ LanceFreeNdisPkts(
 	}
 } /* End of function LanceFreeNdisPkts () */
 
-#endif	/* NDIS40_MINIPORT */
+#endif	/* NDIS50_MINIPORT */
 
 VOID
 LanceShutdownHandler(

@@ -63,7 +63,7 @@ Revision History:
 #include <lancehrd.h>
 #include <lancesft.h>
 
-#ifdef	NDIS40_MINIPORT
+#ifdef	NDIS50_MINIPORT
 
 STATIC
 VOID
@@ -79,7 +79,7 @@ RcvComplete (
 	USHORT					PktIndex
 	);
 
-#endif	/* NDIS40_MINIPORT */
+#endif	/* NDIS50_MINIPORT */
 
 VOID
 LanceEnableInterrupt(
@@ -368,7 +368,7 @@ Return Value:
 	USHORT BufferSize;
 
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 	PNDIS_PACKET *			PktArray = Adapter->PktArray;
 	PNDIS_BUFFER *			BufArray = Adapter->BufArray;
@@ -558,7 +558,7 @@ Return Value:
 					if (LanceRxDbg)
 						DbgPrint("LanceReceiveInterrupt: Skipping this descriptor. Rx status = %lx\n", ReceiveStatus);
 				#endif
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 				*CurrRMDFlags = OWN;
 #endif
 				goto SkipIndication;	/* *YUK* */
@@ -574,7 +574,7 @@ Return Value:
 					DbgPrint("LanceReceiveInterrupt: Packet too large, length %d\n", PacketSize);
 				#endif
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 				*CurrRMDFlags = OWN;
 #endif
 				goto SkipIndication;	/* *YUK* */
@@ -582,7 +582,7 @@ Return Value:
 /*
 	MJ modified to check Multi-Rx.
 */
-#ifndef NDIS40_MINIPORT
+#ifndef NDIS50_MINIPORT
 			LookAheadSize = PacketSize;
 #endif
 			PacketVa = (PVOID)(Adapter->ReceiveBufferPointer +
@@ -611,7 +611,7 @@ Return Value:
 /*
 	MJ modified to check Multi-Rx.
 */
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 		/* [Insert multi-rx code here.] */
 
@@ -647,7 +647,7 @@ Return Value:
 
 		/* 7. Repeat 1 thru 6 for all received packets. */
 
-#else	/* *NOT* NDIS40_MINIPORT */
+#else	/* *NOT* NDIS50_MINIPORT */
 
 			Buffer.Next = NULL;
 			Buffer.Size = 0;
@@ -703,7 +703,7 @@ Return Value:
 
 				IndicatingPacket = TRUE;
 			}
-#endif	/* NDIS40_MINIPORT */
+#endif	/* NDIS50_MINIPORT */
 
 SkipIndication:
 
@@ -721,7 +721,7 @@ SkipIndication:
 /*
 	MJ modified to check Multi-Rx
 */
-#ifndef NDIS40_MINIPORT
+#ifndef NDIS50_MINIPORT
 			*CurrRMDFlags = OWN;
 #endif
 
@@ -786,7 +786,7 @@ SkipIndication:
 /*
 	MJ modified to check Multi_Rx
 */
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 		if (IndicatingPacket)
 		{
 			/* 8. Call NdisMIndicateReceivePacket() with a pointer to the packet array */
@@ -814,14 +814,14 @@ SkipIndication:
 //			NdisMEthIndicateReceiveComplete(Adapter->LanceMiniportHandle);
 		}
 
-#else	/* *NOT* NDIS40_MINIPORT */
+#else	/* *NOT* NDIS50_MINIPORT */
 
 		/* For receiving packet, tell upper layer the job done	*/
 		if (IndicatingPacket)
 		{
 			NdisMEthIndicateReceiveComplete(Adapter->LanceMiniportHandle);
 		}
-#endif	/* NDIS40_MINIPORT */
+#endif	/* NDIS50_MINIPORT */
 	}	/* END if (...) [Check for receive interrupts.]	*/
 
 /****************************************************************************
@@ -830,12 +830,12 @@ SkipIndication:
 
 	if (Csr0Value & LANCE_CSR0_TINT)
 	{
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 		/* Update stats for all completed transmit descriptors. */
 		XmitComplete (Adapter);
 
-#else /* *NOT* NDIS40_MINIPORT */
+#else /* *NOT* NDIS50_MINIPORT */
 
 /* According to the NDIS 4.0 spec, this call is not used or necessary */
 /* when the send routine returns NDIS_STATUS_SUCCESS, which it does in all cases */
@@ -843,7 +843,7 @@ SkipIndication:
 
 		NdisMSendResourcesAvailable(Adapter->LanceMiniportHandle);
 
-#endif /* NDIS40_MINIPORT */
+#endif /* NDIS50_MINIPORT */
 
 		/* Clear no-reset flag	*/
 		Adapter->OpFlags &= ~RESET_PROHIBITED;
@@ -959,7 +959,7 @@ SkipIndication:
 	#endif
 }
 
-#ifdef	NDIS40_MINIPORT
+#ifdef	NDIS50_MINIPORT
 STATIC
 VOID
 XmitComplete (
@@ -1055,7 +1055,7 @@ USHORT	dbgCount=0;
 
 			if (TransmitError & LANCE_TRANSMIT_LCAR_ERROR)
 			{
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 #ifdef _FAILOVER
 	if ((ActiveAdapter == PRI)&&(Adapter->RedundantMode == 1))
@@ -1286,4 +1286,4 @@ LanceReturnPacket(
 	#endif
 }
 
-#endif	/* NDIS40_MINIPORT */
+#endif	/* NDIS50_MINIPORT */

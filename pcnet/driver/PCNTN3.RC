@@ -83,7 +83,7 @@ Revision History:
 
 #ifdef _FAILOVER
  #define VER_INTERNALNAME_STR        "PCNTN4PS.SYS"
-#elif defined(NDIS40_MINIPORT)
+#elif defined(NDIS50_MINIPORT)
  #define VER_INTERNALNAME_STR        "PCNTN4M.SYS"
 #else
  #define VER_INTERNALNAME_STR        "PCNTN3M.SYS"

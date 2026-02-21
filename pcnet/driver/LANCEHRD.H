@@ -317,7 +317,7 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 #define TRANSMIT_BUFFERS         32
 
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
  /* Threshold at which transmit buffer resources are freed */
  #define	TX_INT_WATERMARK		TRANSMIT_BUFFERS / 2
  #define	RX_INT_WATERMARK		RECEIVE_BUFFERS / 2

@@ -43,7 +43,7 @@ Revision History:
 #include <lancesft.h>
 
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 #if DBG
 	UINT PeakPkts = 0;
@@ -607,7 +607,7 @@ TxReset (
 	}
 }
 
-#else	/* start *NOT* NDIS40_MINIPORT */
+#else	/* start *NOT* NDIS50_MINIPORT */
 
 NDIS_STATUS
 LanceSend(
@@ -1100,7 +1100,7 @@ Return Value:
 	#endif
 	return NDIS_STATUS_SUCCESS;
 }	
-#endif	/* end *NOT* NDIS40_MINIPORT */
+#endif	/* end *NOT* NDIS50_MINIPORT */
 
 STATIC
 VOID

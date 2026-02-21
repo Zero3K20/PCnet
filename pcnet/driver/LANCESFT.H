@@ -75,7 +75,7 @@ $Log:   V:\network\pcnet\mini3&4\src\lancesft.h_v  $
 
 #ifdef _FAILOVER
 	#define LANCE_DRIVER_NAME	"PCNTN4PS"
-#elif defined(NDIS40_MINIPORT)
+#elif defined(NDIS50_MINIPORT)
 	#define LANCE_DRIVER_NAME	"PCNTN4M"
 #else
 	#define LANCE_DRIVER_NAME	"PCNTN3M"
@@ -164,7 +164,7 @@ $Log:   V:\network\pcnet\mini3&4\src\lancesft.h_v  $
 #define	PROT_RESERVED_AREA_SIZE		0
 
 /* Used when registering ourselves with NDIS.	*/
-#if NDIS40_MINIPORT
+#if NDIS50_MINIPORT
  #define LANCE_NDIS_MAJOR_VERSION	0x05
  #define LANCE_NDIS_MINOR_VERSION	0x00
  #define MAX_SEND_PACKETS 4
@@ -499,7 +499,7 @@ typedef struct _LANCE_ADAPTER
 
 /* OK TO ADD/MODIFY STRUCTURE PAST THIS POINT. */
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 	NDIS_HANDLE LanceRedMiniportHandle;
 
@@ -684,7 +684,7 @@ typedef struct _LANCE_ADAPTER
 	/* The current network address from the hardware. */
 	UCHAR CurrentNetworkAddress[ETH_LENGTH_OF_ADDRESS];
 
-#if NDIS40_MINIPORT
+#if NDIS50_MINIPORT
 	/* Array of NDIS packet pointers for NDIS4 Multi-Rx.	*/
 	PNDIS_PACKET pNdisPacket[RECEIVE_BUFFERS];
 	PNDIS_PACKET PktArray[RECEIVE_BUFFERS];
@@ -817,7 +817,7 @@ typedef struct _LANCE_REQUEST_RESERVED {
 /* Maximum adapters supported by this driver */
 // #define	MAX_ADAPTERS				4
 
-#if NDIS40_MINIPORT
+#if NDIS50_MINIPORT
 // MJ modified 12 -> 4 and 400 ->1500
  #define	LINK_TIMEOUT			4 /* number of LINK_FREQ units */
  #define	LINK_FREQ				1500	/* # of ms for LanceLinkMonitor function */
@@ -830,7 +830,7 @@ typedef struct _LANCE_REQUEST_RESERVED {
  #define	LINK_UP_COUNT			2
  #define	LINK_DOWN_COUNT			2
 
-#endif /* NDIS40_MINIPORT */
+#endif /* NDIS50_MINIPORT */
 
 /* procedures which do error logging */
 typedef enum _LANCE_PROC_ID{
@@ -969,7 +969,7 @@ LanceHandleInterrupt(
 /*
 	MJ removed Multi_Send function to check Browser problem.
 */
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 VOID
 LanceReturnPacket(
@@ -1005,7 +1005,7 @@ LanceDeleteAdapterMemory(
 	IN	PLANCE_ADAPTER		Adapter
 	);
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 VOID
 LanceCableTimerFunction(

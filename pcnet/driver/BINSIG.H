@@ -128,9 +128,9 @@ DRIVERINFO_TYPE DRIVERINFO =
    1,
    0,
    0,
-#ifdef _FAIOVER
+#ifdef _FAILOVER
 	"PCNTN4PS.SYS",
-#elif defined(NDIS40_MINIPORT)
+#elif defined(NDIS50_MINIPORT)
    "PCNTN4M.SYS",
 #else
    "PCNTN3M.SYS",

@@ -177,7 +177,7 @@ Return Value:
                            OID_GEN_HARDWARE_STATUS,
                            OID_GEN_MEDIA_SUPPORTED,
                            OID_GEN_MEDIA_IN_USE,
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
                            OID_GEN_MEDIA_CONNECT_STATUS,
 									OID_GEN_MAXIMUM_SEND_PACKETS,
 									OID_GEN_VENDOR_DRIVER_VERSION,
@@ -302,7 +302,7 @@ Return Value:
 
                break;
 
-#ifdef NDIS40_MINIPORT
+#ifdef NDIS50_MINIPORT
 
 				case OID_GEN_MEDIA_CONNECT_STATUS:
 					if (LanceReadLink (Adapter->MappedIoBaseAddress,
