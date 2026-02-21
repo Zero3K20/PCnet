@@ -1,6 +1,6 @@
 ; pcntn4m.inf
 ; Installation file for the IBM 10/100 Ethernet MCA Adapter (San Remo)
-; Supports Windows 2000, Windows XP, Windows Server 2003, and later.
+; Supports Windows 2000, Windows XP, Windows Server 2003, Windows 7, and later.
 ;
 ; Usage: Install via Network Connections -> Add -> Adapter -> Have Disk,
 ;        or via Add Hardware Wizard -> Install hardware manually.
@@ -18,13 +18,20 @@ Provider    = %IBM%
 DriverVer   = 02/14/2024,5.0.0.0
 
 [Manufacturer]
-%IBM% = IBM,NTx86
+%IBM% = IBM,NT,NTx86
 
+; Windows 2000 (NT 5.0) uses the plain .NT section.
+[IBM.NT]
+%PCNTN4M.DeviceDesc% = PCNTN4M.ndi, Root\PCNTN4M
+%PCNTN4M.DeviceDesc% = PCNTN4M.ndi, *PCNTN4M
+
+; Windows XP, Server 2003, Vista, 7 (x86) use the .NTx86 section.
 [IBM.NTx86]
+%PCNTN4M.DeviceDesc% = PCNTN4M.ndi, Root\PCNTN4M
 %PCNTN4M.DeviceDesc% = PCNTN4M.ndi, *PCNTN4M
 
 [PCNTN4M.ndi]
-Characteristics = 0x84 ; NCF_PHYSICAL | NCF_HAS_UI
+Characteristics = 0x4  ; NCF_PHYSICAL
 BusType         = 1    ; ISA
 AddReg          = PCNTN4M.ndi.reg
 CopyFiles       = PCNTN4M.CopyFiles
@@ -36,6 +43,11 @@ AddService = PCNTN4M, 2, PCNTN4M.Service, PCNTN4M.EventLog
 HKR, Ndi,              Service,    0, "PCNTN4M"
 HKR, Ndi\Interfaces,   UpperRange, 0, "ndis5"
 HKR, Ndi\Interfaces,   LowerRange, 0, "ethernet"
+
+; Vista/7 NDIS classification — required for TCP/IP to bind correctly.
+HKR, Ndi, *IfType,            0x00010001, 6   ; IF_TYPE_ETHERNET_CSMACD
+HKR, Ndi, *MediaType,         0x00010001, 0   ; NdisMedium802_3
+HKR, Ndi, *PhysicalMediaType, 0x00010001, 0   ; NdisPhysicalMediumUnspecified
 
 ; Default hardware resource settings.
 ; IOAddress: MCA I/O base address (default 0x1C00).

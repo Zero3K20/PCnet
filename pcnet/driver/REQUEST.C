@@ -196,6 +196,7 @@ Return Value:
                            OID_GEN_CURRENT_LOOKAHEAD,
                            OID_GEN_DRIVER_VERSION,
                            OID_GEN_MAXIMUM_TOTAL_SIZE,
+                           OID_GEN_PHYSICAL_MEDIUM,
 
 
                            OID_GEN_XMIT_OK,
@@ -383,6 +384,13 @@ Return Value:
             case OID_GEN_CURRENT_PACKET_FILTER:
 
                GenericUlong = Adapter->CurrentPacketFilter;
+               break;
+
+            case OID_GEN_PHYSICAL_MEDIUM:
+
+               /* NdisPhysicalMediumUnspecified (0) = standard wired 802.3 Ethernet.
+                * Required by Windows Vista/7 to bind TCP/IP to the adapter. */
+               GenericUlong = 0;
                break;
 
             default:
