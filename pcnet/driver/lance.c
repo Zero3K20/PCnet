@@ -3207,20 +3207,20 @@ ExtPhyLinkStatus(
 	/*      MIIPD = 0       External PHY? Maybe, maybe not!                                         */
 	/* Of course, all of this is theory and conjecture anyway...            */
 
-	LANCE_READ_BCR(IoBaseAddress, LANCE_BCR32, &TempValue);
+	LancePciReadBcr(IoBaseAddress, LANCE_BCR32, &TempValue);
 	/* If no PHY is detected, double-check by reading the IEEE ID */
 	/* register. If it's all ones (0xFFFF), we'll assume that there's no */
 	/* external PHY present */
 	if (!(TempValue & MIIPD))
 	{
 		/* Write address of IEEE ID register */
-		LANCE_READ_BCR(IoBaseAddress, MII_ADDR, &Bcr33Value);
+		LancePciReadBcr(IoBaseAddress, MII_ADDR, &Bcr33Value);
 		Bcr33Value &= PHYADDR_MASK;
 		NewBcr33Value = Bcr33Value | MII_IEEE_ID;
-		LANCE_WRITE_BCR(IoBaseAddress, MII_ADDR, NewBcr33Value);
+		LancePciWriteBcr(IoBaseAddress, MII_ADDR, NewBcr33Value);
 
 		/* Read IEEE ID from MII data register */
-		LANCE_READ_BCR(IoBaseAddress, MII_MDR, &TempValue);
+		LancePciReadBcr(IoBaseAddress, MII_MDR, &TempValue);
 
 		/* Two assumtions are made here:        */
 		/* 1. There is no IEEE ID == 0 or 0xFFFF */
@@ -3232,13 +3232,13 @@ ExtPhyLinkStatus(
 		}                                       /* No PHY means no link, right? Bail out here */
 	}
 	/* Write address of MII register to be read */
-	LANCE_READ_BCR(IoBaseAddress, MII_ADDR, &Bcr33Value);
+	LancePciReadBcr(IoBaseAddress, MII_ADDR, &Bcr33Value);
 	Bcr33Value &= PHYADDR_MASK;
 	NewBcr33Value = Bcr33Value | MII_STAT_REG;
-	LANCE_WRITE_BCR(IoBaseAddress, MII_ADDR, NewBcr33Value);
+	LancePciWriteBcr(IoBaseAddress, MII_ADDR, NewBcr33Value);
 
 	/* Read Status from MII */
-	LANCE_READ_BCR(IoBaseAddress, MII_MDR, &TempValue);
+	LancePciReadBcr(IoBaseAddress, MII_MDR, &TempValue);
 
 	/* Test link status bit and exit FALSE if necessary */
 	if (!(TempValue & LS0))
@@ -3260,11 +3260,11 @@ IntPhyLinkStatus(
 
 	/* Determine if the internal PHY is in Full Duplex mode */
 	/* and set local variable to indicate the correct state. */
-	LANCE_READ_BCR(IoBaseAddress, LANCE_FDC_REG, &FullDuplex);
+	LancePciReadBcr(IoBaseAddress, LANCE_FDC_REG, &FullDuplex);
 	FullDuplex &= LANCE_FDC_FDEN;	/* Non-zero (TRUE) if full duplex */
 
 	/* Read and save contents of LED0 status register. */
-	LANCE_READ_BCR(IoBaseAddress, LANCE_LED0_STAT, &TempValue);
+	LancePciReadBcr(IoBaseAddress, LANCE_LED0_STAT, &TempValue);
 
 	/* Mask off any read-only bits */
 	TempValue &= LANCE_LINKSE_MASK;
@@ -3272,18 +3272,18 @@ IntPhyLinkStatus(
 	/* Configure LED0 status reg to indicate link status */
 	if (FullDuplex)	/* Full duplex link status */
 	{
-		LANCE_WRITE_BCR(IoBaseAddress, LANCE_LED0_STAT, LANCE_LINK_FDE);
+		LancePciWriteBcr(IoBaseAddress, LANCE_LED0_STAT, LANCE_LINK_FDE);
 	}
 	else	/* Half duplex link status */
 	{
-		LANCE_WRITE_BCR(IoBaseAddress, LANCE_LED0_STAT, LANCE_LINKSE);
+		LancePciWriteBcr(IoBaseAddress, LANCE_LED0_STAT, LANCE_LINKSE);
 	}
 
 	/* Read link status from LED0 register */
-	LANCE_READ_BCR(IoBaseAddress, LANCE_LED0_STAT, &LinkStatus);
+	LancePciReadBcr(IoBaseAddress, LANCE_LED0_STAT, &LinkStatus);
 
 	/* Restore LED0 Stat register configuration */
-	LANCE_WRITE_BCR(IoBaseAddress, LANCE_LED0_STAT, TempValue);
+	LancePciWriteBcr(IoBaseAddress, LANCE_LED0_STAT, TempValue);
 
 	/* Test relevant bit(s) and return the proper state. */
 	if (!(LinkStatus & LANCE_LED_ON))
@@ -3380,12 +3380,12 @@ LanceSetExtPhyMedia(
 		DbgPrint("==>LanceSetExtPhyMedia\n");
 #endif
 
-	LANCE_READ_BCR(IoBaseAddress, LANCE_BCR2, &Data);
-	LANCE_WRITE_BCR(IoBaseAddress, LANCE_BCR2, Data | LANCE_BCR2_ASEL);
+	LancePciReadBcr(IoBaseAddress, LANCE_BCR2, &Data);
+	LancePciWriteBcr(IoBaseAddress, LANCE_BCR2, Data | LANCE_BCR2_ASEL);
 
 	//	LanceResetExtPhy(IoBaseAddress);
 
-	LANCE_READ_BCR(IoBaseAddress, LANCE_BCR32, &Data);
+	LancePciReadBcr(IoBaseAddress, LANCE_BCR32, &Data);
 	TempByte = (UCHAR)Data;
 #if DBG
 	if (LanceExtPhyDbg)
@@ -3418,23 +3418,23 @@ LanceSetExtPhyMedia(
 
 	}
 	/* Write the new BCR32 value with DANAS Set */
-	LANCE_WRITE_BCR(IoBaseAddress, LANCE_BCR32, TempByte);
+	LancePciWriteBcr(IoBaseAddress, LANCE_BCR32, TempByte);
 
 	/* Clear the DANAS bit */
 	TempByte &= ~DANAS;		/* Enable auto-neg. auto setup. */
 
 	/* Write the new BCR32 value with DANAS Clear */
-	LANCE_WRITE_BCR(IoBaseAddress, LANCE_BCR32, TempByte);
+	LancePciWriteBcr(IoBaseAddress, LANCE_BCR32, TempByte);
 
 	/* Clear the Reset bit */
 	TempByte &= ~XPHYRST;		/* Enable auto-neg. auto setup. */
 
 	/* Write the new BCR32 value with DANAS Clear */
-	LANCE_WRITE_BCR(IoBaseAddress, LANCE_BCR32, TempByte);
+	LancePciWriteBcr(IoBaseAddress, LANCE_BCR32, TempByte);
 
 #if DBG
 	if (LanceExtPhyDbg) {
-		LANCE_READ_BCR(IoBaseAddress, LANCE_BCR32, &Data);
+		LancePciReadBcr(IoBaseAddress, LANCE_BCR32, &Data);
 		DbgPrint("BCR32 : %x\n", Data);
 	}
 #endif
