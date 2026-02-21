@@ -1218,14 +1218,6 @@ Return Value:
 			// PCI scan specified, device not found
 		case LANCE_INIT_ERROR_21:
 			// Device not found
-		case LANCE_INIT_ERROR_25:
-			// MCA device not found
-		case LANCE_INIT_ERROR_22:
-			// PnP scan specified, device not found
-		case LANCE_INIT_ERROR_23:
-			// VESA scan specified, device not found
-		case LANCE_INIT_ERROR_24:
-			// ISA scan specified, device not found
 			ErrorCode = NDIS_ERROR_CODE_ADAPTER_NOT_FOUND;
 			break;
 

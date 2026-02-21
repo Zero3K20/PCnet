@@ -287,10 +287,6 @@ typedef enum DmiSpecific
 #define LANCE_INIT_ERROR_19		19
 #define LANCE_INIT_ERROR_20		20
 #define LANCE_INIT_ERROR_21		21
-#define LANCE_INIT_ERROR_22		22
-#define LANCE_INIT_ERROR_23		23
-#define LANCE_INIT_ERROR_24		24
-#define LANCE_INIT_ERROR_25		25
 
 #define ANCHOR_ID 				0x0701110e		/* Anchorage id */
 #define HILANCE_PORT			0x8800			/* Hilance port in Anchorage */
