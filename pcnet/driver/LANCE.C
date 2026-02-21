@@ -3429,11 +3429,14 @@ Return Value:
 
 	}
 
-	NdisQueryBuffer(
+	NdisQueryBufferSafe(
 		CurrentBuffer,
 		&VirtualAddress,
-		&CurrentLength
+		&CurrentLength,
+		NormalPagePriority
 	);
+	if (!VirtualAddress)
+		return;
 
 	while (LocalBytesCopied < BytesToCopy) {
 
@@ -3452,11 +3455,14 @@ Return Value:
 			if (!CurrentBuffer)
 				break;
 
-			NdisQueryBuffer(
+			NdisQueryBufferSafe(
 				CurrentBuffer,
 				&VirtualAddress,
-				&CurrentLength
+				&CurrentLength,
+				NormalPagePriority
 			);
+			if (!VirtualAddress)
+				break;
 
 			continue;
 
