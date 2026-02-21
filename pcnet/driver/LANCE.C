@@ -2064,7 +2064,7 @@ Return Value:
         switch ((ChipId >> LANCE_CSR88_PARTID_SHIFT) & LANCE_CSR88_PARTID_MASK)
         {
         case LANCE_PARTID_AM79C970A:  /* Am79C970A — PCnet-PCI II */
-            Adapter->DeviceType = PCNET_PCI_DIRECT;
+            Adapter->DeviceType = PCNET_PCI1;
             break;
         case LANCE_PARTID_AM79C971:   /* Am79C971 — PCnet-FAST */
         case LANCE_PARTID_AM79C972:   /* Am79C972 — PCnet-FAST+ */
