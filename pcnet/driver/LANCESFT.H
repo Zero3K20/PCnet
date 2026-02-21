@@ -165,7 +165,7 @@ $Log:   V:\network\pcnet\mini3&4\src\lancesft.h_v  $
 
 /* Used when registering ourselves with NDIS.	*/
 #if NDIS40_MINIPORT
- #define LANCE_NDIS_MAJOR_VERSION	0x04
+ #define LANCE_NDIS_MAJOR_VERSION	0x05
  #define LANCE_NDIS_MINOR_VERSION	0x00
  #define MAX_SEND_PACKETS 4
 #else

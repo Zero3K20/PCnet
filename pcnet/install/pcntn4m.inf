@@ -1,0 +1,81 @@
+; pcntn4m.inf
+; Installation file for the IBM 10/100 Ethernet MCA Adapter (San Remo)
+; Supports Windows 2000, Windows XP, Windows Server 2003, and later.
+;
+; Usage: Install via Network Connections -> Add -> Adapter -> Have Disk,
+;        or via Add Hardware Wizard -> Install hardware manually.
+;
+; Recommended resource settings:
+;   IO Base Address : 0x1C00
+;   IRQ             : 10
+;   DMA Channel     : 5
+
+[Version]
+Signature   = "$Windows NT$"
+Class       = Net
+ClassGUID   = {4d36e972-e325-11ce-bfc1-08002be10318}
+Provider    = %IBM%
+DriverVer   = 02/14/2024,5.0.0.0
+
+[Manufacturer]
+%IBM% = IBM,NTx86
+
+[IBM.NTx86]
+%PCNTN4M.DeviceDesc% = PCNTN4M.ndi, *PCNTN4M
+
+[PCNTN4M.ndi]
+Characteristics = 0x84 ; NCF_PHYSICAL | NCF_HAS_UI
+BusType         = 1    ; ISA
+AddReg          = PCNTN4M.ndi.reg
+CopyFiles       = PCNTN4M.CopyFiles
+
+[PCNTN4M.ndi.Services]
+AddService = PCNTN4M, 2, PCNTN4M.Service, PCNTN4M.EventLog
+
+[PCNTN4M.ndi.reg]
+HKR, Ndi,              Service,    0, "PCNTN4M"
+HKR, Ndi\Interfaces,   UpperRange, 0, "ndis5"
+HKR, Ndi\Interfaces,   LowerRange, 0, "ethernet"
+
+; Default hardware resource settings.
+; IOAddress: MCA I/O base address (default 0x1C00).
+; Interrupt: IRQ line used by the adapter (default 10).
+; DmaChannel: DMA channel (default 5).
+; BUS_TO_SCAN: Must be "MCA" to enable the San Remo device scan.
+HKR, ,  IOAddress,   0x00010001, 0x00001C00
+HKR, ,  Interrupt,   0x00010001, 10
+HKR, ,  DmaChannel,  0x00010001, 5
+HKR, ,  BUS_TO_SCAN, 0x00000000, "MCA"
+
+[PCNTN4M.Service]
+DisplayName    = %PCNTN4M.Service.DispName%
+ServiceType    = 1  ; SERVICE_KERNEL_DRIVER
+StartType      = 3  ; SERVICE_DEMAND_START
+ErrorControl   = 1  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\PCNTN4M.sys
+LoadOrderGroup = NDIS
+
+[PCNTN4M.EventLog]
+AddReg = PCNTN4M.EventLog.reg
+
+[PCNTN4M.EventLog.reg]
+HKR,, EventMessageFile, 0x00020000, "%%SystemRoot%%\System32\netevent.dll"
+HKR,, TypesSupported,   0x00010001, 7
+
+[PCNTN4M.CopyFiles]
+PCNTN4M.sys
+
+[DestinationDirs]
+PCNTN4M.CopyFiles = 12   ; %windir%\system32\drivers
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+PCNTN4M.sys = 1
+
+[Strings]
+IBM                      = "IBM"
+PCNTN4M.DeviceDesc       = "IBM 10/100 Ethernet MCA Adapter (San Remo)"
+PCNTN4M.Service.DispName = "IBM 10/100 Ethernet MCA Miniport"
+DiskName                 = "IBM San Remo Driver Disk"

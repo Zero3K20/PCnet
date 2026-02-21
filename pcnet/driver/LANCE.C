@@ -426,7 +426,7 @@ Return Value:
 	{
 		DbgPrint("==>DriverEntry\n");
 		if (LanceBreak)
-			_asm int 3;
+			DbgBreakPoint();
 	}
 #endif
 
@@ -609,7 +609,7 @@ Return Value:
 	}
 #if DBG
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 
 	if (MediumArray[MediumArraySize] != NdisMedium802_3)
@@ -809,7 +809,7 @@ Return Value:
 	if (LanceDbg)
 		DbgPrint("==>LanceInitialize\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 
 	if (Status == NDIS_STATUS_SUCCESS)
@@ -1233,7 +1233,7 @@ Return Value:
 	if (LanceDbg)
 		DbgPrint("==>LanceRegisterAdapter\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 
 	//
@@ -1316,8 +1316,10 @@ Return Value:
 
 	//
 	// Set bus interface and DMA type
-	//	
-	InterfaceType = NdisInterfaceMca;
+	// Use ISA interface for Windows 2000 and later compatibility
+	// (MCA bus is not supported in Windows 2000+)
+	//
+	InterfaceType = NdisInterfaceIsa;
 	//
 	// Register the adapter with NDIS.
 	//
@@ -1697,7 +1699,7 @@ Return Value:
 	if (LanceDbg)
 		DbgPrint("==>LanceHardwareDetails\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 
 	//
@@ -1714,7 +1716,7 @@ Return Value:
 	if (LanceDbg)
 		DbgPrint("==>Bus Scan \n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 	switch (Adapter->BusScan)
 	{
@@ -1722,7 +1724,7 @@ Return Value:
 		if (Adapter->BusType == MicroChannel)
 		{
 			//
-			//Scan MCA bus to find controller
+			//Scan MCA bus to find controller (Windows NT 4.0)
 			//
 			LanceScanMca(Adapter, ConfigurationHandle);
 			if (!Adapter->BoardFound)
@@ -1736,15 +1738,30 @@ Return Value:
 			{
 				break;
 			}
+			return LANCE_INIT_ERROR_25;
 		}
-		return LANCE_INIT_ERROR_25;
+		else
+		{
+			//
+			// Windows 2000 and later: MCA bus is not enumerated by the OS.
+			// Use registry-supplied resource values (IOAddress, Interrupt,
+			// DmaChannel) that were already read in LanceInitialize().
+			// Require at least a valid IO base address to proceed.
+			//
+			if (Adapter->PhysicalIoBaseAddress != 0)
+			{
+				LanceScanMca(Adapter, ConfigurationHandle);
+				break;
+			}
+			return LANCE_INIT_ERROR_25;
+		}
 
 
 	default:
 		if (Adapter->BusType == MicroChannel)
 		{
 			//
-			//Scan MCA bus to find controller
+			//Scan MCA bus to find controller (Windows NT 4.0)
 			//
 			LanceScanMca(Adapter, ConfigurationHandle);
 			if (!Adapter->BoardFound)
@@ -1759,6 +1776,17 @@ Return Value:
 				break;
 			}
 			return LANCE_INIT_ERROR_25;
+		}
+		else
+		{
+			//
+			// Windows 2000 and later: use registry-supplied resource values.
+			//
+			if (Adapter->PhysicalIoBaseAddress != 0)
+			{
+				LanceScanMca(Adapter, ConfigurationHandle);
+				break;
+			}
 		}
 
 	}	/* switch */
@@ -1899,7 +1927,7 @@ LanceCheckIrqDmaValid(
 	if (LanceDbg)
 		DbgPrint("==>LanceCheckIrqDmaValid\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 
 
@@ -1946,7 +1974,7 @@ LanceCleanResources(
 	if (LanceDbg)
 		DbgPrint("==>LanceCleanResources\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 
 	//
@@ -1996,21 +2024,27 @@ Return Value:
 --*/
 
 {
-	NDIS_MCA_POS_DATA McaData;
+#ifdef NDIS40_MINIPORT
 	NDIS_STATUS Status;
+	NDIS_MCA_POS_DATA McaData;
 	UINT slot;
+#endif
 
 #if DBG
 	if (LanceDbg)
 		DbgPrint("==>LanceScanMca\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 
 #endif
 
+#ifdef NDIS40_MINIPORT
 	//
-	// Read MCA POS codes and find out the resources
-	//	
+	// On Windows NT 4.0 with MCA bus: read POS codes to discover resources.
+	// On Windows 2000 and later MCA bus is not supported by the OS, so
+	// NdisReadMcaPosInformation is not available; fall through to use
+	// the registry-supplied values already loaded into the Adapter structure.
+	//
 	NdisReadMcaPosInformation(
 		&Status,
 		ConfigurationHandle,
@@ -2050,6 +2084,14 @@ Return Value:
 			}
 		}
 	}
+#else
+	//
+	// Windows 2000 and later: NdisReadMcaPosInformation is not available.
+	// Resources (IOAddress, Interrupt, DmaChannel) must be specified in the
+	// registry / INF file and have already been read into the Adapter structure
+	// by LanceInitialize().
+	//
+#endif /* NDIS40_MINIPORT */
 
 	//
 	// Set chip and bus types
@@ -2095,7 +2137,7 @@ Return Value:
 	if (LanceDbg)
 		DbgPrint("==>LancePciEnableDma\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 
 	LanceSetPciDma(Adapter, TRUE);
@@ -2140,7 +2182,7 @@ None.
 	if (LanceDbg)
 		DbgPrint("==>srent_config\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 
 	/* This sequence of writes goes out to the San Remo ASIC
@@ -2291,7 +2333,7 @@ None.
 	if (LanceDbg)
 		DbgPrint("<==srent_config\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 
 } // srent_config()
@@ -2326,7 +2368,7 @@ Return Value:
 	if (LanceDbg)
 		DbgPrint("==>LancePciDisableDma\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 
 	LanceSetPciDma(Adapter, FALSE);
@@ -2426,7 +2468,7 @@ Return Value:
 	if (LanceDbg)
 		DbgPrint("==>LanceInit\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 
 	/* Check if reset is allowed	*/
@@ -2880,7 +2922,7 @@ InitFullDuplexMode(
 	if (LanceDbg)
 		DbgPrint("==>InitFullDuplexMode\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 	if (Adapter->BoardFound == MCA_DEV)
 	{
@@ -2925,7 +2967,7 @@ InitFullDuplexMode(
 	if (LanceDbg)
 		DbgPrint("<==InitFullDuplexMode\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 } /* End of function InitFullDuplexMode () */
 STATIC
@@ -2967,7 +3009,7 @@ InitLEDs(
 	if (LanceDbg)
 		DbgPrint("<==InitLEDs\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 
 } /* End of function InitLEDs () */
@@ -3118,7 +3160,7 @@ Return Value:
 		if (LanceDbg)
 		DbgPrint("==>LanceReset\n");
 	if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
 #endif
 
 	ASSERT(!(Adapter->OpFlags & RESET_IN_PROGRESS));

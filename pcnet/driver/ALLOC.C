@@ -78,13 +78,15 @@ Return Value:
       if (LanceDbg)    
          DbgPrint("==>LanceAllocateAdapterMemory\n");
 	  if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
    #endif
 
 	//
 	// Set bus interface and DMA type
+	// Use ISA interface for Windows 2000 and later compatibility
+	// (MCA bus is not supported in Windows 2000+)
 	//
-	InterfaceType = NdisInterfaceMca;
+	InterfaceType = NdisInterfaceIsa;
 	
 	if(NdisQueryMapRegisterCount(InterfaceType, &maxMapReg)
       != NDIS_STATUS_SUCCESS)
@@ -320,7 +322,7 @@ Return Value:
      if (LanceDbg)    
 		DbgPrint("==>LanceDeleteAdapterMemory\n");
 	 if (LanceBreak)
-		_asm int 3;
+		DbgBreakPoint();
    #endif    
 
    if (Adapter->SharedMemoryVa) {
