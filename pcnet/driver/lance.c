@@ -1253,12 +1253,18 @@ Return Value:
 	}
 
 	//
-	// Register the adapter with NDIS.
+	// Register the adapter with NDIS using the NDIS 5.0 extended API so that
+	// bus-master DMA, packet/request timeouts, and power-management behavior
+	// are declared correctly on Windows 2000 and later.
 	//
-	NdisMSetAttributes(
+	NdisMSetAttributesEx(
 		Adapter->LanceMiniportHandle,
 		(NDIS_HANDLE)Adapter,
-		TRUE,
+		0,		// CheckForHangTimeInSeconds: use NDIS default
+		NDIS_ATTRIBUTE_BUS_MASTER |
+		NDIS_ATTRIBUTE_IGNORE_PACKET_TIMEOUT |
+		NDIS_ATTRIBUTE_IGNORE_REQUEST_TIMEOUT |
+		NDIS_ATTRIBUTE_NO_HALT_ON_SUSPEND,
 		NdisInterfacePci
 	);
 

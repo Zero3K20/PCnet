@@ -281,7 +281,7 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 /* Default transmit settings	*/
 
 /* Default # of buffers	*/
-#define TRANSMIT_BUFFERS         128
+#define TRANSMIT_BUFFERS         256
 
 
 #ifdef NDIS50_MINIPORT
@@ -301,7 +301,7 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 //
 // Default # of buffers
 //
-#define RECEIVE_BUFFERS          128
+#define RECEIVE_BUFFERS          256
 
 //
 // Default size of receive buffer
