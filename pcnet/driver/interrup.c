@@ -272,16 +272,21 @@ Return Value:
 	{
 		#if DBG
 		if (LanceDbg)
+		{
 			DbgPrint("IDON bit = %x\n",Csr0Value);
 			DbgPrint("LanceISR routine: Not my interrupt.\n");
+		}
 		#endif
 	}
 
     /* Acknowledge ASIC interrupt flags and re-prepare?
 	   ASIC is not documented. */
-	NdisRawWritePortUshort((Adapter->MappedIoBaseAddress + 0x18), ASICData18);
-	NdisRawWritePortUshort((Adapter->MappedIoBaseAddress + 0x02), ASICData02);
-	NdisRawWritePortUshort((Adapter->MappedIoBaseAddress + 0x1A), 0x0FFF);
+	if (!Adapter->IsPciDirect)
+	{
+		NdisRawWritePortUshort((Adapter->MappedIoBaseAddress + 0x18), ASICData18);
+		NdisRawWritePortUshort((Adapter->MappedIoBaseAddress + 0x02), ASICData02);
+		NdisRawWritePortUshort((Adapter->MappedIoBaseAddress + 0x1A), 0x0FFF);
+	}
 
 	LOG(OUT_ISR)
 
