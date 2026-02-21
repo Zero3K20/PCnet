@@ -257,7 +257,7 @@ typedef enum DmiSpecific
 #define FDUP_OFF		0x0000		/* Full Duplex Mode turned off			*/
 #define FDUP_AUI		0x0003		/* AUI Mode turned on					*/
 #define FDUP_10BASE_T	0x0001		/* 10Base-T Mode turned on				*/
-#define LINESPEED_DEFAULT 10		/* PCnet default line speed			*/
+#define LINESPEED_DEFAULT 100		/* PCnet default line speed			*/
 
 /* MapRegisters */
 #define DEFAULT_MAP_REG_COUNT 	2
