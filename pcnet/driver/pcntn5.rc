@@ -84,9 +84,9 @@ Revision History:
 #ifdef _FAILOVER
  #define VER_INTERNALNAME_STR        "PCNTN5PS.SYS"
 #elif defined(NDIS50_MINIPORT)
- #define VER_INTERNALNAME_STR        "PCNTN5M.SYS"
+ #define VER_INTERNALNAME_STR        "pcntn5m.sys"
 #else
- #define VER_INTERNALNAME_STR        "PCNTN5M.SYS"
+ #define VER_INTERNALNAME_STR        "pcntn5m.sys"
 #endif
 
 #define VER_ORIGINALFILENAME_STR    VER_INTERNALNAME_STR

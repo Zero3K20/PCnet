@@ -100,7 +100,7 @@ DisplayName    = %PCNTN5M.Service.DispName%
 ServiceType    = 1  ; SERVICE_KERNEL_DRIVER
 StartType      = 3  ; SERVICE_DEMAND_START
 ErrorControl   = 1  ; SERVICE_ERROR_NORMAL
-ServiceBinary  = %12%\PCNTN5M.sys
+ServiceBinary  = %12%\pcntn5m.sys
 LoadOrderGroup = NDIS
 
 [PCNTN5M.EventLog]
@@ -111,7 +111,7 @@ HKR,, EventMessageFile, 0x00020000, "%%SystemRoot%%\System32\netevent.dll"
 HKR,, TypesSupported,   0x00010001, 7
 
 [PCNTN5M.CopyFiles]
-PCNTN5M.sys
+pcntn5m.sys
 
 [DestinationDirs]
 PCNTN5M.CopyFiles = 12   ; %windir%\system32\drivers
@@ -120,7 +120,7 @@ PCNTN5M.CopyFiles = 12   ; %windir%\system32\drivers
 1 = %DiskName%,,,""
 
 [SourceDisksFiles]
-PCNTN5M.sys = 1
+pcntn5m.sys = 1
 
 [Strings]
 IBM                      = "IBM"

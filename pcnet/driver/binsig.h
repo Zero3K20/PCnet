@@ -131,9 +131,9 @@ DRIVERINFO_TYPE DRIVERINFO =
 #ifdef _FAILOVER
 	"PCNTN5PS.SYS",
 #elif defined(NDIS50_MINIPORT)
-   "PCNTN5M.SYS",
+   "pcntn5m.sys",
 #else
-   "PCNTN5M.SYS",
+   "pcntn5m.sys",
 #endif
    "5.00.001",
    "12-13-2022",
