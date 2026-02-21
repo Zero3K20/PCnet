@@ -128,6 +128,7 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 #define LANCE_BCR7_PSE        0x0080
 #define LANCE_BCR18_BREADE    0x0040
 #define LANCE_BCR18_BWRITE    0x0020
+#define LANCE_BCR18_LINBC     0x0800  /* Line burst count: 8 DWORDs (32 bytes) per DMA burst */
 
 /* define bcr2 */
 #define LANCE_BCR2				2

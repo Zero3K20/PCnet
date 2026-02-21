@@ -2329,11 +2329,13 @@ NOTES:
 	default:
 		/* write dma burst and bus control register bcr18	*/
 		LanceReadBcr(Adapter, LANCE_BCR18, &Data);
-		Data |= (LANCE_BCR18_BREADE | LANCE_BCR18_BWRITE);
+		Data |= (LANCE_BCR18_BREADE | LANCE_BCR18_BWRITE | LANCE_BCR18_LINBC);
 		LanceWriteBcr(Adapter, LANCE_BCR18, Data);
 		LanceReadCsr(Adapter, LANCE_CSR4, &Data);
 		Data |= LANCE_CSR4_DMAPLUS;
 		LanceWriteCsr(Adapter, LANCE_CSR4, Data);
+		/* Write Bus Activity Timer to CSR82 */
+		LanceWriteCsr(Adapter, LANCE_CSR82, Adapter->BusTimer);
 		break;
 	}
 
