@@ -45,9 +45,12 @@ HKR, Ndi\Interfaces,   UpperRange, 0, "ndis5"
 HKR, Ndi\Interfaces,   LowerRange, 0, "ethernet"
 
 ; Vista/7 NDIS classification — required for TCP/IP to bind correctly.
-HKR, Ndi, *IfType,            0x00010001, 6   ; IF_TYPE_ETHERNET_CSMACD
-HKR, Ndi, *MediaType,         0x00010001, 0   ; NdisMedium802_3
-HKR, Ndi, *PhysicalMediaType, 0x00010001, 0   ; NdisPhysicalMediumUnspecified
+; FLG_ADDREG_NOCLOBBER (0x2) is set so these are written on first install but
+; NOT overwritten on driver updates; this prevents NDIS from triggering a full
+; interface rebind during update (which causes a 60-second timeout on Windows 7).
+HKR, Ndi, *IfType,            0x00010003, 6   ; IF_TYPE_ETHERNET_CSMACD, no-clobber
+HKR, Ndi, *MediaType,         0x00010003, 0   ; NdisMedium802_3, no-clobber
+HKR, Ndi, *PhysicalMediaType, 0x00010003, 0   ; NdisPhysicalMediumUnspecified, no-clobber
 
 ; Default hardware resource settings.
 ; IOAddress: MCA I/O base address (default 0x1C00).
