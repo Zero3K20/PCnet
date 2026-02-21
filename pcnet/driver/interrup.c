@@ -424,22 +424,6 @@ Return Value:
 
 	}
 
-	if ((Csr0Value & LANCE_CSR0_MISS) &&
-		(Adapter->DeviceType == LANCE))
-	{
-		#if DBG
-		if(LanceDbg)
-		{
-			DbgPrint("CSR0_MISS on Rx: Reset sequence initiated. \n");
-		}
-		#endif
-
-		if(!(Adapter->OpFlags & RESET_IN_PROGRESS))
-		{
-			Adapter->OpFlags &= ~(STOP_SET);
-		}
-	}	
-
 	/* Check for receive interrupts.	*/
 	if (Csr0Value & (LANCE_CSR0_RINT | LANCE_CSR0_MISS))
 	{		
@@ -867,7 +851,6 @@ SkipIndication:
 	{
 		case PCNET_PCI3:
 		case PCNET_PCI2_B2:
-		case PCNET_ISA_PLUS_PLUS:
 			break;
 
 		case LANCE:

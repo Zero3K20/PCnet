@@ -264,7 +264,6 @@ typedef enum DmiSpecific
 
 /* Device type	*/
 #define LANCE				0x00	/* LANCE present FLAG				*/
-#define PCNET_ISA_PLUS_PLUS	0x03	/* PCNetISA ++ present flag (legacy, unused)	*/
 #define PCNET_PCI2_A4		0x04	/* PCNetPCI 2 rev A4 present flag	*/
 #define PCNET_PCI2_B2		0x05	/* PCNetPCI 2 rev B2 present flag	*/
 #define PCNET_PCI3			0x06	/* PCNetPCI 3 present flag			*/

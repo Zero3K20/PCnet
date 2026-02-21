@@ -1603,8 +1603,8 @@ Return Value:
 	}
 #endif
 
-	/* Reset the chip by reading the RESET register at BAR0+0x18 */
-	NdisRawReadPortUlong(Adapter->PhysicalIoBaseAddress + LANCE_DWIO_DIRECT_RST, &Data);
+	/* Reset the chip by reading the RESET register at BAR0+0x18 (read has side effect) */
+	{ ULONG ResetVal; NdisRawReadPortUlong(Adapter->PhysicalIoBaseAddress + LANCE_DWIO_DIRECT_RST, &ResetVal); }
 	NdisStallExecution(500);
 
 	if (Adapter->DeviceType == PCNET_PCI3)

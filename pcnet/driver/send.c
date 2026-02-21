@@ -296,7 +296,6 @@ Return Value:
 
 			if (Adapter->DeviceType != PCNET_PCI2_B2 &&
 			Adapter->DeviceType != PCNET_PCI3 &&
-			Adapter->DeviceType != PCNET_ISA_PLUS_PLUS)
 			{
 
 				if ((TransmitError & LANCE_TRANSMIT_UFLO_ERROR) ||
@@ -687,7 +686,6 @@ Return Value:
 
 	if (Adapter->DeviceType != PCNET_PCI2_B2 &&
 		Adapter->DeviceType != PCNET_PCI3 &&
-		Adapter->DeviceType != PCNET_ISA_PLUS_PLUS)
 	{
 		//
 		// If chip not running, restart it
@@ -824,7 +822,6 @@ Return Value:
 
 			if (Adapter->DeviceType != PCNET_PCI2_B2 &&
 			Adapter->DeviceType != PCNET_PCI3 &&
-			Adapter->DeviceType != PCNET_ISA_PLUS_PLUS)
 			{
 
 				if ((TransmitError & LANCE_TRANSMIT_UFLO_ERROR) ||
@@ -1298,7 +1295,6 @@ Return Value:
 
 			if (Adapter->DeviceType != PCNET_PCI2_B2 &&
 			Adapter->DeviceType != PCNET_PCI3 &&
-			Adapter->DeviceType != PCNET_ISA_PLUS_PLUS)
 			{
 
 				if ((TransmitError & LANCE_TRANSMIT_UFLO_ERROR) ||
