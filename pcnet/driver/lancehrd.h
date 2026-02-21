@@ -208,12 +208,13 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 #define LANCE_CSR3_BCON    0x0001
 #define LANCE_CSR3_ACON    0x0002
 #define LANCE_CSR3_BSWP    0x0004
+#define LANCE_CSR3_DXSUFLO 0x0040
+#define LANCE_CSR3_LAPPEN  0x0020  /* Lookahead Packet Processing Enable: begin DMA while frame still arriving */
 #define LANCE_CSR3_TINTM   0x0200
 #define LANCE_CSR3_TINTM_IDONM 0x0300
 #define LANCE_CSR3_IDONM   0x0100
 #define LANCE_CSR3_BABLM   0x4000
 #define LANCE_CSR3_MERRM   0x0800
-#define LANCE_CSR3_DXSUFLO 0x0040
 
 /* define csr4 bits: */
 #define LANCE_CSR4_DMAPLUS 0x4000
@@ -227,10 +228,16 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 #define LANCE_CSR5_MPMODE	0x0002
 #define LANCE_CSR5_MPEN		0x0004
 #define LANCE_CSR5_MPPLBA	0x0020
+#define LANCE_CSR5_TOKINTD	0x8000  /* Transmit OK Interrupt Disable: suppress per-packet TX-OK ISR */
 
 /* define csr15 bits: */
 #define LANCE_CSR15_DRX   0x0001
 #define LANCE_CSR15_DTX   0x0002
+
+/* define csr80 bits (DMA Transfer Counter and FIFO Watermark Control): */
+#define LANCE_CSR80           80
+#define LANCE_CSR80_XMTSP_64  0x0800  /* TX start point: begin TX when 64 bytes in FIFO (XMTSP=10b) */
+#define LANCE_CSR80_RCVFW_64  0x2000  /* RX FIFO watermark: fetch when 64 bytes received (RCVFW=10b) */
 
 /* define csr125 IPG value: */
 #define LANCE_CSR125_IPG  0x5c00

@@ -2353,10 +2353,10 @@ NOTES:
 		break;
 
 	default:
-		/* Transmit Start Point setting(csr80)	*/
-		LanceReadCsr(Adapter, 80, &Data);
-		Data |= 0x0800;
-		LanceWriteCsr(Adapter, 80, Data);
+		/* TX start point (64 bytes) + RX FIFO watermark (64 bytes) via CSR80 */
+		LanceReadCsr(Adapter, LANCE_CSR80, &Data);
+		Data |= (LANCE_CSR80_XMTSP_64 | LANCE_CSR80_RCVFW_64);
+		LanceWriteCsr(Adapter, LANCE_CSR80, Data);
 		break;
 	}
 
@@ -2370,12 +2370,22 @@ NOTES:
 		break;
 
 	default:
-		Data |= (LANCE_CSR3_IDONM | LANCE_CSR3_MERRM | LANCE_CSR3_DXSUFLO | LANCE_CSR3_BABLM);
+		Data |= (LANCE_CSR3_IDONM | LANCE_CSR3_MERRM | LANCE_CSR3_DXSUFLO | LANCE_CSR3_BABLM | LANCE_CSR3_LAPPEN);
 		break;
 	}
 
 
 	LanceWriteCsr(Adapter, LANCE_CSR3, Data);
+
+	/* Suppress per-packet TX-OK interrupt (CSR5 TOKINTD) on PCI devices to reduce ISR load.
+	 * TOKINTD is a PCI-specific feature (CSR5 bit 15); the original ISA LANCE chip does not
+	 * support CSR5 TOKINTD — writing it on LANCE hardware is harmless but unnecessary. */
+	if (Adapter->DeviceType != LANCE)
+	{
+		LanceReadCsr(Adapter, LANCE_CSR5, &Data);
+		Data |= LANCE_CSR5_TOKINTD;
+		LanceWriteCsr(Adapter, LANCE_CSR5, Data);
+	}
 
 	if (FullReset)
 	{
