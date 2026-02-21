@@ -1027,6 +1027,38 @@ LanceGetActiveMediaInfo (
 
 #endif 
 
+/* I/O dispatch helpers — select ASIC bridge or direct PCI access.
+ * Defined here as static __inline so LANCE.C, INTERRUP.C, SEND.C and REQUEST.C
+ * each get their own inlined copy without a shared link-time symbol. */
+static __inline VOID LanceReadCsr(PLANCE_ADAPTER Adapter, ULONG Reg, PULONG Value)
+{
+    if (Adapter->IsPciDirect)
+        LancePciReadCsr(Adapter->MappedIoBaseAddress, Reg, Value);
+    else
+        LANCE_READ_CSR(Adapter->MappedIoBaseAddress, Reg, Value);
+}
+static __inline VOID LanceWriteCsr(PLANCE_ADAPTER Adapter, ULONG Reg, ULONG Value)
+{
+    if (Adapter->IsPciDirect)
+        LancePciWriteCsr(Adapter->MappedIoBaseAddress, Reg, Value);
+    else
+        LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, Reg, Value);
+}
+static __inline VOID LanceReadBcr(PLANCE_ADAPTER Adapter, ULONG Reg, PULONG Value)
+{
+    if (Adapter->IsPciDirect)
+        LancePciReadBcr(Adapter->MappedIoBaseAddress, Reg, Value);
+    else
+        LANCE_READ_BCR(Adapter->MappedIoBaseAddress, Reg, Value);
+}
+static __inline VOID LanceWriteBcr(PLANCE_ADAPTER Adapter, ULONG Reg, ULONG Value)
+{
+    if (Adapter->IsPciDirect)
+        LancePciWriteBcr(Adapter->MappedIoBaseAddress, Reg, Value);
+    else
+        LANCE_WRITE_BCR(Adapter->MappedIoBaseAddress, Reg, Value);
+}
+
 #endif /* #ifndef DMIDLL */
 
 #endif /* _LANCESFT_ */
