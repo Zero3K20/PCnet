@@ -834,6 +834,44 @@ typedef struct _LANCE_RECEIVE_DESCRIPTOR {
 }
 
 #endif /* #if MTX */
+
+/* Direct DWIO register access for PCI PCnet adapters (no ASIC bridge).
+ * In DWIO mode: RAP is at base+0x14, RDP at base+0x10, IDP at base+0x1C. */
+static __inline VOID
+LancePciWriteRap(ULONG Base, ULONG Reg)
+{
+    NdisRawWritePortUlong(Base + 0x14, Reg);
+}
+
+static __inline VOID
+LancePciReadCsr(ULONG Base, ULONG Reg, PULONG Value)
+{
+    NdisRawWritePortUlong(Base + 0x14, Reg);
+    NdisRawReadPortUlong(Base + 0x10, Value);
+    *Value &= 0x0000FFFF;
+}
+
+static __inline VOID
+LancePciWriteCsr(ULONG Base, ULONG Reg, ULONG Value)
+{
+    NdisRawWritePortUlong(Base + 0x14, Reg);
+    NdisRawWritePortUlong(Base + 0x10, Value & 0x0000FFFF);
+}
+
+static __inline VOID
+LancePciReadBcr(ULONG Base, ULONG Reg, PULONG Value)
+{
+    NdisRawWritePortUlong(Base + 0x14, Reg);
+    NdisRawReadPortUlong(Base + 0x1C, Value);
+    *Value &= 0x0000FFFF;
+}
+
+static __inline VOID
+LancePciWriteBcr(ULONG Base, ULONG Reg, ULONG Value)
+{
+    NdisRawWritePortUlong(Base + 0x14, Reg);
+    NdisRawWritePortUlong(Base + 0x1C, Value & 0x0000FFFF);
+}
 /****************************************************************************/
 
 //

@@ -1547,7 +1547,7 @@ Return Value:
          break;
 
 		case DMI_OPCODE_GET_RAM_SIZE:
-			LANCE_READ_BCR (Adapter->MappedIoBaseAddress, 25, &Data);
+			LanceReadBcr(Adapter, 25, &Data);
 			ReqBlock->Value = ((USHORT)Data << 8);
 			break;
 
@@ -1571,11 +1571,11 @@ INT	RetCode		= LANCE_PORT_SUCCESS;
 				switch (AccessType)
 				{
 					case PORT_READ:
-						LANCE_READ_CSR (Adapter->MappedIoBaseAddress, Adapter->CsrNum, pData);
+						LanceReadCsr(Adapter, Adapter->CsrNum, pData);
 						break;
 
 					case PORT_WRITE:
-						LANCE_WRITE_CSR (Adapter->MappedIoBaseAddress, Adapter->CsrNum, *pData);
+						LanceWriteCsr(Adapter, Adapter->CsrNum, *pData);
 						break;
 
 					default:
@@ -1587,11 +1587,11 @@ INT	RetCode		= LANCE_PORT_SUCCESS;
 				switch (AccessType)
 				{
 					case PORT_READ:
-						LANCE_READ_BCR (Adapter->MappedIoBaseAddress, Adapter->BcrNum, pData);
+						LanceReadBcr(Adapter, Adapter->BcrNum, pData);
 						break;
 
 					case PORT_WRITE:
-						LANCE_WRITE_BCR (Adapter->MappedIoBaseAddress, Adapter->BcrNum, *pData);
+						LanceWriteBcr(Adapter, Adapter->BcrNum, *pData);
 						break;
 
 					default:

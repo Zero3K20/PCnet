@@ -24,11 +24,19 @@ DriverVer   = 02/14/2024,5.0.0.0
 [IBM.NT]
 %PCNTN4M.DeviceDesc% = PCNTN4M.ndi, Root\PCNTN4M
 %PCNTN4M.DeviceDesc% = PCNTN4M.ndi, *PCNTN4M
+; PCI\VEN_1022 = AMD
+%PCNTN4M_PCI0.DeviceDesc% = PCNTN4M_PCI.ndi, PCI\VEN_1022&DEV_2000  ; Am79C970A PCnet-PCI II
+%PCNTN4M_PCI1.DeviceDesc% = PCNTN4M_PCI.ndi, PCI\VEN_1022&DEV_2001  ; Am79C971 PCnet-FAST
+%PCNTN4M_PCI3.DeviceDesc% = PCNTN4M_PCI.ndi, PCI\VEN_1022&DEV_2625  ; Am79C973 PCnet-FAST III
 
 ; Windows XP, Server 2003, Vista, 7 (x86) use the .NTx86 section.
 [IBM.NTx86]
 %PCNTN4M.DeviceDesc% = PCNTN4M.ndi, Root\PCNTN4M
 %PCNTN4M.DeviceDesc% = PCNTN4M.ndi, *PCNTN4M
+; PCI\VEN_1022 = AMD
+%PCNTN4M_PCI0.DeviceDesc% = PCNTN4M_PCI.ndi, PCI\VEN_1022&DEV_2000  ; Am79C970A PCnet-PCI II
+%PCNTN4M_PCI1.DeviceDesc% = PCNTN4M_PCI.ndi, PCI\VEN_1022&DEV_2001  ; Am79C971 PCnet-FAST
+%PCNTN4M_PCI3.DeviceDesc% = PCNTN4M_PCI.ndi, PCI\VEN_1022&DEV_2625  ; Am79C973 PCnet-FAST III
 
 [PCNTN4M.ndi]
 Characteristics = 0x4  ; NCF_PHYSICAL
@@ -62,6 +70,25 @@ HKR, ,  Interrupt,   0x00010001, 10
 HKR, ,  DmaChannel,  0x00010001, 5
 HKR, ,  BUS_TO_SCAN, 0x00000000, "MCA"
 
+[PCNTN4M_PCI.ndi]
+Characteristics = 0x4  ; NCF_PHYSICAL
+BusType         = 5    ; PCI
+AddReg          = PCNTN4M_PCI.ndi.reg
+CopyFiles       = PCNTN4M.CopyFiles
+
+[PCNTN4M_PCI.ndi.Services]
+AddService = PCNTN4M, 2, PCNTN4M.Service, PCNTN4M.EventLog
+
+[PCNTN4M_PCI.ndi.reg]
+HKR, Ndi,              Service,    0, "PCNTN4M"
+HKR, Ndi\Interfaces,   UpperRange, 0, "ndis5"
+HKR, Ndi\Interfaces,   LowerRange, 0, "ethernet"
+HKR, Ndi, *IfType,            0x00010003, 6
+HKR, Ndi, *MediaType,         0x00010003, 0
+HKR, Ndi, *PhysicalMediaType, 0x00010003, 0
+; BusType=5 tells the driver this is a PCI device (direct register access, no ASIC bridge)
+HKR, ,  BusType, 0x00010001, 5
+
 [PCNTN4M.Service]
 DisplayName    = %PCNTN4M.Service.DispName%
 ServiceType    = 1  ; SERVICE_KERNEL_DRIVER
@@ -94,3 +121,6 @@ IBM                      = "IBM"
 PCNTN4M.DeviceDesc       = "IBM 10/100 Ethernet MCA Adapter (San Remo)"
 PCNTN4M.Service.DispName = "IBM 10/100 Ethernet MCA Miniport"
 DiskName                 = "IBM San Remo Driver Disk"
+PCNTN4M_PCI0.DeviceDesc  = "AMD PCnet-PCI II Ethernet Adapter (Am79C970A)"
+PCNTN4M_PCI1.DeviceDesc  = "AMD PCnet-FAST Ethernet Adapter (Am79C971)"
+PCNTN4M_PCI3.DeviceDesc  = "AMD PCnet-FAST III Ethernet Adapter (Am79C973)"

@@ -110,8 +110,9 @@ Return Value:
 	#endif
 	
 	/* Enable device interrupts	*/
-	ASIC_ENABLE_INTERRUPTS(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress);
-	LANCE_WRITE_CSR(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress, LANCE_CSR0, LANCE_CSR0_IENA);
+	if (!((PLANCE_ADAPTER)Adapter)->IsPciDirect)
+		ASIC_ENABLE_INTERRUPTS(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress);
+	LanceWriteCsr((PLANCE_ADAPTER)Adapter, LANCE_CSR0, LANCE_CSR0_IENA);
 	
 	#if DBG
 		if (LanceDbg)
@@ -155,8 +156,9 @@ Return Value:
     //NdisRawReadPortUlong((((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + ASIC_IO_DATA_REGISTER), &SavedRAPValue); 
 
 	/* Disable device interrupts.	Only IENA is affected by writing 0	*/
-	ASIC_DISABLE_INTERRUPTS(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress);
-	LANCE_WRITE_CSR(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress, LANCE_CSR0, 0);
+	if (!((PLANCE_ADAPTER)Adapter)->IsPciDirect)
+		ASIC_DISABLE_INTERRUPTS(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress);
+	LanceWriteCsr((PLANCE_ADAPTER)Adapter, LANCE_CSR0, 0);
 
 	/* Restore RAP value */	
 	//NdisRawWritePortUshort(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + LANCE_RAP_PORT, SavedRAPValue);
@@ -241,7 +243,7 @@ Return Value:
     //NdisRawReadPortUlong((Adapter->MappedIoBaseAddress + ASIC_IO_DATA_REGISTER), &SavedRAPValue);   
 
 	/* Read CSR0 value	*/
-	LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, &Csr0Value);
+	LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
 
 	/* Check if we own this interrupt	*/	
 	if ((Csr0Value & (LANCE_CSR0_INTR)) && (Csr0Value & (LANCE_CSR0_IENA)) )
@@ -249,7 +251,7 @@ Return Value:
 		/* Disable interrupt source. Writing zeroes to the interrupt status */
 		/* bits in CSR0 has no effect on them. All the other bits except	*/
 		/* IENA (interrupt enable, bit 6) are read only.					*/
-		LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, 0);
+		LanceWriteCsr(Adapter, LANCE_CSR0, 0);
 
 		/* Replace default return value	*/
 		*InterruptRecognized = TRUE;
@@ -403,7 +405,7 @@ Return Value:
 	}
 
 	/* Read CSR0 for interrupts	*/
-	LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, &Csr0Value);
+	LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
 
 	/* Check if there are any pending interrupts	*/
 	/* If STOP bit is set, reset the chip.	Note: when	*/
@@ -528,7 +530,7 @@ Return Value:
 					DbgPrint("LanceReceiveInterrupt: No rx descriptors to process.\n");
 				#endif
 				/* Clear interrupt source #2 */
-				LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, (LANCE_CSR0_RINT | LANCE_CSR0_MISS));
+				LanceWriteCsr(Adapter, LANCE_CSR0, (LANCE_CSR0_RINT | LANCE_CSR0_MISS));
 				/* Check status after clearing int */
 				if (ReceiveStatus & OWN)
 					break;	/* The only way out of this 'while' loop */
@@ -841,7 +843,7 @@ SkipIndication:
 		++Adapter->DmiSpecific[DMI_CSR0_ERR];		
 		
 		/* Clear interrupt source #1 */
-		LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0,
+		LanceWriteCsr(Adapter, LANCE_CSR0,
 			(LANCE_CSR0_MERR | LANCE_CSR0_BABL | LANCE_CSR0_CERR | LANCE_CSR0_MISS));
 		#if DBG
 		if (LanceDbg)
@@ -922,7 +924,7 @@ SkipIndication:
 
 				/* Start Lance, but do not enable interrupts as	*/
 				/* interrupts will be enabled at the end of the DPC. */
-//				LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, LANCE_CSR0_START);
+//				LanceWriteCsr(Adapter, LANCE_CSR0, LANCE_CSR0_START);
 
 				/* Clear the flags and return	*/
 //				Adapter->OpFlags &= ~RESET_IN_PROGRESS;
@@ -1145,9 +1147,9 @@ DoNotIndicateCableDisconnect:
 
 	/* Disable TX interrupts here */
 // MJ : Disabled tx watermark
-//	LANCE_READ_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR3, &Data);
+//	LanceReadCsr(Adapter, LANCE_CSR3, &Data);
 //	Data |= LANCE_CSR3_TINTM;
-//	LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR3, Data);
+//	LanceWriteCsr(Adapter, LANCE_CSR3, Data);
 
 //MJ modified | to &
 	if (Adapter->OpFlags & TX_RESOURCES)
@@ -1161,7 +1163,7 @@ DoNotIndicateCableDisconnect:
 	}
 
 	/* Clear interrupt source #3 */
-	LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, LANCE_CSR0, LANCE_CSR0_TINT);
+	LanceWriteCsr(Adapter, LANCE_CSR0, LANCE_CSR0_TINT);
 
 #if DBG
 	if (LanceSendDbg)

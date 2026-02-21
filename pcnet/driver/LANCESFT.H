@@ -279,6 +279,7 @@ typedef enum DmiSpecific
 #define PCNET_PCI2_B2		0x05	/* PCNetPCI 2 rev B2 present flag	*/
 #define PCNET_PCI3			0x06	/* PCNetPCI 3 present flag			*/
 #define PCNET_PCI1			0x07	/* PCNetPCI 3 present flag			*/
+#define PCNET_PCI_DIRECT    0x08    /* Direct PCI PCnet (no ASIC bridge) */
 
 
 /* Chip ID in CSR 9 :	*/
@@ -525,6 +526,8 @@ typedef struct _LANCE_ADAPTER
 
 	/* Bus type, i.e., ISA, PCI */
 	USHORT BusType;
+
+	BOOLEAN IsPciDirect;    /* TRUE when PCnet registers are directly at BAR0 (no ASIC bridge) */
 
 	/* Device Type, i.e., PCNET-ISA or LANCE */
 	UCHAR DeviceType;
