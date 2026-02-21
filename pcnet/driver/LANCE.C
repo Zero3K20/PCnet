@@ -1325,7 +1325,7 @@ Return Value:
 	NdisMSetAttributes(
 		Adapter->LanceMiniportHandle,
 		(NDIS_HANDLE)Adapter,
-		(BOOLEAN)(Adapter->IsPciDirect ? TRUE : FALSE),
+		Adapter->IsPciDirect,
 		InterfaceType
 	);
 
@@ -2429,28 +2429,28 @@ static VOID LanceReadCsr(PLANCE_ADAPTER Adapter, ULONG Reg, PULONG Value)
     if (Adapter->IsPciDirect)
         LancePciReadCsr(Adapter->MappedIoBaseAddress, Reg, Value);
     else
-        LanceReadCsr(Adapter, Reg, Value);
+        LANCE_READ_CSR(Adapter->MappedIoBaseAddress, Reg, Value);
 }
 static VOID LanceWriteCsr(PLANCE_ADAPTER Adapter, ULONG Reg, ULONG Value)
 {
     if (Adapter->IsPciDirect)
         LancePciWriteCsr(Adapter->MappedIoBaseAddress, Reg, Value);
     else
-        LanceWriteCsr(Adapter, Reg, Value);
+        LANCE_WRITE_CSR(Adapter->MappedIoBaseAddress, Reg, Value);
 }
 static VOID LanceReadBcr(PLANCE_ADAPTER Adapter, ULONG Reg, PULONG Value)
 {
     if (Adapter->IsPciDirect)
         LancePciReadBcr(Adapter->MappedIoBaseAddress, Reg, Value);
     else
-        LanceReadBcr(Adapter, Reg, Value);
+        LANCE_READ_BCR(Adapter->MappedIoBaseAddress, Reg, Value);
 }
 static VOID LanceWriteBcr(PLANCE_ADAPTER Adapter, ULONG Reg, ULONG Value)
 {
     if (Adapter->IsPciDirect)
         LancePciWriteBcr(Adapter->MappedIoBaseAddress, Reg, Value);
     else
-        LanceWriteBcr(Adapter, Reg, Value);
+        LANCE_WRITE_BCR(Adapter->MappedIoBaseAddress, Reg, Value);
 }
 
 VOID
