@@ -3129,8 +3129,12 @@ LanceGetActiveMediaInfo(
 	}
 	else
 	{
-		/* Read duplex mode from internal phy (10Mbps) */
-		Adapter->LineSpeed = 10;
+		/* No external PHY detected. PCnet-FAST III is a 100 Mbps capable  */
+		/* chip; without an external PHY it uses its on-chip 100 Mbps      */
+		/* transceiver (e.g. in virtual environments such as VirtualBox    */
+		/* that do not emulate MII registers). Report 100 Mbps so the      */
+		/* host TCP/IP stack uses an appropriate receive window size.       */
+		Adapter->LineSpeed = 100;
 		/* Determine if the internal PHY is in Full Duplex mode */
 		LanceReadBcr(Adapter, LANCE_FDC_REG, &Adapter->FullDuplex);
 		Adapter->FullDuplex &= LANCE_FDC_FDEN;  /* Non-zero (TRUE) if full duplex */
