@@ -167,7 +167,7 @@ $Log:   V:\network\pcnet\mini3&4\src\lancesft.h_v  $
 #if NDIS50_MINIPORT
  #define LANCE_NDIS_MAJOR_VERSION	0x05
  #define LANCE_NDIS_MINOR_VERSION	0x00
- #define MAX_SEND_PACKETS 4
+ #define MAX_SEND_PACKETS 64
 #else
  #define LANCE_NDIS_MAJOR_VERSION	0x03
  #define LANCE_NDIS_MINOR_VERSION	0x0A
