@@ -1254,8 +1254,12 @@ Return Value:
 
 	//
 	// Register the adapter with NDIS using the NDIS 5.0 extended API so that
-	// bus-master DMA, packet/request timeouts, and power-management behavior
-	// are declared correctly on Windows 2000 and later.
+	// bus-master DMA and packet/request timeouts are declared correctly on
+	// Windows 2000 and later.  NDIS_ATTRIBUTE_NO_HALT_ON_SUSPEND is intentionally
+	// omitted: without it, NDIS calls LanceHalt during ACPI S3/S4 transitions and
+	// VM save operations, which stops the DMA engine before Windows tears down the
+	// HAL DMA adapter structures.  Leaving the DMA engine running during those
+	// transitions can corrupt pool memory belonging to unrelated drivers.
 	//
 	NdisMSetAttributesEx(
 		Adapter->LanceMiniportHandle,
@@ -1263,8 +1267,7 @@ Return Value:
 		0,		// CheckForHangTimeInSeconds: use NDIS default
 		NDIS_ATTRIBUTE_BUS_MASTER |
 		NDIS_ATTRIBUTE_IGNORE_PACKET_TIMEOUT |
-		NDIS_ATTRIBUTE_IGNORE_REQUEST_TIMEOUT |
-		NDIS_ATTRIBUTE_NO_HALT_ON_SUSPEND,
+		NDIS_ATTRIBUTE_IGNORE_REQUEST_TIMEOUT,
 		NdisInterfacePci
 	);
 
