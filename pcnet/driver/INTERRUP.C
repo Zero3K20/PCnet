@@ -629,15 +629,8 @@ Return Value:
 
 //			NDIS_SET_PACKET_TIME_RECEIVED(Adapter->pNdisPacket[CurrentDescriptorIndex],SystemTime);
 
-		/* 4. Call NdisFlushBuffer and NdisMUpdateSharedMemory to ensure data */
-		/*    integrity. UPDATE: Both calls map to NULL in NDIS.H */
-			NdisFlushBuffer (Adapter->pNdisBuffer[CurrentDescriptorIndex], FALSE);
-			NdisMUpdateSharedMemory (Adapter->LanceMiniportHandle,
-									PacketSize,
-									PacketVa,
-									Adapter->ReceiveBufferPointerPhysical +
-									(CurrentDescriptorIndex	* RECEIVE_BUFFER_SIZE)
-									);
+		/* 4. NdisFlushBuffer and NdisMUpdateSharedMemory are no-ops in NDIS 5.x;
+		 *    omitted for WDK 7600 compatibility. */
 
 		/* 5. Place packet pointer into the packet array & increment the packet array index. */
 			BufArray[PktIndex] = Adapter->pNdisBuffer[CurrentDescriptorIndex];
@@ -657,14 +650,8 @@ Return Value:
 			Buffer.ByteCount = PacketSize;
 			Buffer.ByteOffset = 0;
 
-			NdisFlushBuffer (&Buffer, FALSE);
-
-			NdisMUpdateSharedMemory (Adapter->LanceMiniportHandle,
-									PacketSize,
-									PacketVa,
-									Adapter->ReceiveBufferPointerPhysical +
-									(CurrentDescriptorIndex	* RECEIVE_BUFFER_SIZE)
-									);
+			/* NdisFlushBuffer and NdisMUpdateSharedMemory are no-ops in NDIS 5.x;
+			 * omitted for WDK 7600 compatibility. */
 
 			/* Indicate a packet is received and available	*/
 

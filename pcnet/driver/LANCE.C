@@ -2023,12 +2023,6 @@ Return Value:
 --*/
 
 {
-#ifdef NDIS50_MINIPORT
-	NDIS_STATUS Status;
-	NDIS_MCA_POS_DATA McaData;
-	UINT slot;
-#endif
-
 #if DBG
 	if (LanceDbg)
 		DbgPrint("==>LanceScanMca\n");
@@ -2037,60 +2031,12 @@ Return Value:
 
 #endif
 
-#ifdef NDIS50_MINIPORT
 	//
-	// On Windows NT 4.0 with MCA bus: read POS codes to discover resources.
-	// On Windows 2000 and later MCA bus is not supported by the OS, so
-	// NdisReadMcaPosInformation is not available; fall through to use
-	// the registry-supplied values already loaded into the Adapter structure.
-	//
-	NdisReadMcaPosInformation(
-		&Status,
-		ConfigurationHandle,
-		&slot,
-		&McaData
-	);
-
-
-	if (Status == NDIS_STATUS_SUCCESS)
-	{
-		if (McaData.AdapterId == SR_ADAPTER_ID)
-		{
-			// Upper 6 bits of POS[2] contain the IO base * 0x100) 
-			Adapter->PhysicalIoBaseAddress = ((McaData.PosData1 & 0xFC)) << 8;
-
-
-			// Upper 4 bits of POS[3] contain the DMA arbitration level.
-			// Unused from CPU side, but reserved by POS for the adapter's 
-			// busmaster to use.
-			Adapter->LanceDmaChannel = McaData.PosData2 >> 4;
-
-			// Lower 2 bits of POS[5] encode the IRQ 
-			switch (McaData.PosData4 & 0x03)
-			{
-			case 0x00:
-				Adapter->LanceInterruptVector = 15;
-				break;
-			case 0x01:
-				Adapter->LanceInterruptVector = 12;
-				break;
-			case 0x02:
-				Adapter->LanceInterruptVector = 11;
-				break;
-			case 0x03:
-				Adapter->LanceInterruptVector = 10;
-				break;
-			}
-		}
-	}
-#else
-	//
-	// Windows 2000 and later: NdisReadMcaPosInformation is not available.
+	// NdisReadMcaPosInformation is not available in WDK 7600 (NDIS 5.x).
 	// Resources (IOAddress, Interrupt, DmaChannel) must be specified in the
 	// registry / INF file and have already been read into the Adapter structure
 	// by LanceInitialize().
 	//
-#endif /* NDIS50_MINIPORT */
 
 	//
 	// Set chip and bus types

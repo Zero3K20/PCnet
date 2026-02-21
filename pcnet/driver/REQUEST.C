@@ -1408,19 +1408,19 @@ Return Value:
 			break;
 
 		case DMI_OPCODE_GET_CSR_VALUE:
-			ReqBlock->Status = LancePortAccess (Adapter, &ReqBlock->Value, CSR_READ);
+			ReqBlock->Status = (WORD)LancePortAccess (Adapter, &ReqBlock->Value, CSR_READ);
 			break;
 
 		case DMI_OPCODE_GET_BCR_VALUE:
-			ReqBlock->Status = LancePortAccess (Adapter, &ReqBlock->Value, BCR_READ);
+			ReqBlock->Status = (WORD)LancePortAccess (Adapter, &ReqBlock->Value, BCR_READ);
 			break;
 
 		case DMI_OPCODE_SET_CSR_VALUE:
-			ReqBlock->Status = LancePortAccess (Adapter, &ReqBlock->Value, CSR_WRITE);
+			ReqBlock->Status = (WORD)LancePortAccess (Adapter, &ReqBlock->Value, CSR_WRITE);
 			break;
 
 		case DMI_OPCODE_SET_BCR_VALUE:
-			ReqBlock->Status = LancePortAccess (Adapter, &ReqBlock->Value, BCR_WRITE);
+			ReqBlock->Status = (WORD)LancePortAccess (Adapter, &ReqBlock->Value, BCR_WRITE);
 			break;
 
 		case DMI_OPCODE_GET_CSR_NUMBER:

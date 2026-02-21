@@ -344,13 +344,11 @@ UCHAR LanceMutex (USHORT Flag);
 /* Macros used for memory allocation and deallocation.	*/
 #define LANCE_ALLOC_MEMORY(_Status, _Address, _Length)					\
 {																		\
-	NDIS_PHYSICAL_ADDRESS Temp = NDIS_PHYSICAL_ADDRESS_CONST(-1, -1); 	\
-	*(_Status) = NdisAllocateMemory(									\
-					(PVOID)(_Address),									\
-					(_Length), 	 										\
-					0,			 										\
-					Temp		 										\
-					);			 										\
+	*(_Status) = NdisAllocateMemoryWithTag(								\
+					(PVOID *)(_Address),								\
+					(_Length),											\
+					'ECNL'												\
+					);													\
 }
 
 #define LANCE_FREE_MEMORY(Address, Length)								\
@@ -358,32 +356,28 @@ UCHAR LanceMutex (USHORT Flag);
 
 #define LANCE_ALLOC_CONTIGUOUS_MEMORY(_Status, _Address, _Length)		\
 {																		\
-	NDIS_PHYSICAL_ADDRESS Temp = NDIS_PHYSICAL_ADDRESS_CONST(-1, 0);	\
-	*(_Status) = NdisAllocateMemory((PVOID)(_Address),					\
-									(_Length),							\
-									NDIS_MEMORY_CONTIGUOUS,				\
-									Temp);								\
+	*(_Status) = NdisAllocateMemoryWithTag(								\
+					(PVOID *)(_Address),								\
+					(_Length),											\
+					'ECNL'												\
+					);													\
 }
 
 #define LANCE_FREE_CONTIGUOUS_MEMORY(Address, Length)					\
-	NdisFreeMemory((PVOID)(Address), (Length), NDIS_MEMORY_CONTIGUOUS)
+	NdisFreeMemory((PVOID)(Address), (Length), 0)
 
 #define LANCE_ALLOC_NONCACHED_MEMORY(_Status, _Address, _Length)		\
 {																		\
-	NDIS_PHYSICAL_ADDRESS Temp = NDIS_PHYSICAL_ADDRESS_CONST(-1, 0);	\
-	*(_Status) = NdisAllocateMemory((PVOID)(_Address),					\
-									(_Length),							\
-									(NDIS_MEMORY_CONTIGUOUS |			\
-									NDIS_MEMORY_NONCACHED),				\
-									Temp);								\
+	*(_Status) = NdisAllocateMemoryWithTag(								\
+					(PVOID *)(_Address),								\
+					(_Length),											\
+					'ECNL'												\
+					);													\
 }
 
 #define LANCE_FREE_NONCACHED_MEMORY(Address, Length)					\
 {																		\
-	NdisFreeMemory((PVOID)(Address),									\
-				   (Length),											\
-				   (NDIS_MEMORY_CONTIGUOUS |							\
-				   NDIS_MEMORY_NONCACHED))								\
+	NdisFreeMemory((PVOID)(Address), (Length), 0);						\
 }
 
 

@@ -430,15 +430,8 @@ Return Value:
 		Buffer.StartVa = CurrentDestination;
 		Buffer.ByteCount = TotalPacketSize;
 		Buffer.ByteOffset = 0;
-
-		NdisFlushBuffer (&Buffer, TRUE);
-
-		NdisMUpdateSharedMemory (Adapter->LanceMiniportHandle,
-								TotalPacketSize,
-								CurrentDestination,
-								Adapter->TransmitBufferPointerPhysical +
-								(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE)
-								);
+		/* NdisFlushBuffer and NdisMUpdateSharedMemory are no-ops in NDIS 5.x;
+		 * omitted for WDK 7600 compatibility. */
 								
 		if (Adapter->SwStyle == SW_STYLE_2)
 		{
@@ -963,14 +956,8 @@ Return Value:
 	Buffer.ByteCount = TotalPacketSize;
 	Buffer.ByteOffset = 0;
 
-	NdisFlushBuffer (&Buffer, TRUE);
-
-	NdisMUpdateSharedMemory (Adapter->LanceMiniportHandle,
-							TotalPacketSize,
-							CurrentDestination,
-							Adapter->TransmitBufferPointerPhysical +
-							(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE)
-							);
+	/* NdisFlushBuffer and NdisMUpdateSharedMemory are no-ops in NDIS 5.x;
+	 * omitted for WDK 7600 compatibility. */
 							
 	if (Adapter->SwStyle == SW_STYLE_2)
 	{
@@ -1437,15 +1424,8 @@ Return Value:
 		Buffer.StartVa = CurrentDestination;
 		Buffer.ByteCount = TotalPacketSize;
 		Buffer.ByteOffset = 0;
-
-		NdisFlushBuffer (&Buffer, TRUE);
-
-		NdisMUpdateSharedMemory (Adapter->LanceMiniportHandle,
-								TotalPacketSize,
-								CurrentDestination,
-								Adapter->TransmitBufferPointerPhysical +
-								(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE)
-								);
+		/* NdisFlushBuffer and NdisMUpdateSharedMemory are no-ops in NDIS 5.x;
+		 * omitted for WDK 7600 compatibility. */
 								
 		if (Adapter->SwStyle == SW_STYLE_2)
 		{

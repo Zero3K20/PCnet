@@ -71,7 +71,6 @@ Return Value:
     ULONG Length;
     UINT  pTempVa, pTempPa;
 	UINT  maxMapReg;
-	NDIS_INTERFACE_TYPE InterfaceType;
 
    #if DBG
       if (LanceDbg)    
@@ -80,16 +79,8 @@ Return Value:
 		DbgBreakPoint();
    #endif
 
-	//
-	// Set bus interface and DMA type
-	// Use ISA interface for Windows 2000 and later compatibility
-	// (MCA bus is not supported in Windows 2000+)
-	//
-	InterfaceType = NdisInterfaceIsa;
-	
-	if(NdisQueryMapRegisterCount(InterfaceType, &maxMapReg)
-      != NDIS_STATUS_SUCCESS)
-		maxMapReg = DEFAULT_MAP_REG_COUNT;
+	// NdisQueryMapRegisterCount was removed in WDK 7600; use the default directly.
+	maxMapReg = DEFAULT_MAP_REG_COUNT;
 	maxMapReg = (maxMapReg<TRANSMIT_BUFFERS)?maxMapReg:TRANSMIT_BUFFERS;
 
    //
