@@ -104,7 +104,7 @@ Return Value:
    if (NdisMAllocateMapRegisters(
          Adapter->LanceMiniportHandle,
          (UINT)Adapter->LanceDmaChannel,
-         TRUE, //(BOOLEAN)(Adapter->BoardFound == PCI_DEV || Adapter->BoardFound == MCA_DEV),
+         TRUE, 
 //         (ULONG)4,
 //	      Adapter->AllocatedCachedMemorySize  //RECEIVE_BUFFER_SIZE
 			maxMapReg, //TRANSMIT_BUFFERS,
@@ -134,7 +134,7 @@ Return Value:
    NdisMAllocateSharedMemory(
 	     Adapter->LanceMiniportHandle,
 	     (ULONG)Adapter->AllocatedCachedMemorySize,
-	     TRUE, //(BOOLEAN)(Adapter->BoardFound == PCI_DEV || Adapter->BoardFound == MCA_DEV),
+	     TRUE, 
 	     (PVOID *)&(Adapter->SharedCachedMemoryVa),
 	     &(Adapter->SharedCachedMemoryPa)
 	     );
@@ -305,7 +305,7 @@ Return Value:
       NdisMFreeSharedMemory(
 	    Adapter->LanceMiniportHandle,
 	    Adapter->AllocatedCachedMemorySize,
-		 TRUE, //(BOOLEAN)(Adapter->BoardFound == PCI_DEV || Adapter->BoardFound == MCA_DEV),
+		 TRUE, 
 	    Adapter->SharedCachedMemoryVa,
 	    Adapter->SharedCachedMemoryPa
 	    );

@@ -100,7 +100,6 @@ static const UCHAR VendorDescription[] = "AMD PCnet Ethernet Adapter";
 
 #ifdef ENGLISH
 CHAR* msg1 = "NdisRegisterMac successful";
-CHAR* msg2 = "BusScan = ";
 CHAR* msg3 = "led0 = ";
 CHAR* msg4 = "led1 = ";
 CHAR* msg5 = "led2 = ";
@@ -120,13 +119,10 @@ CHAR* msg18 = "PCI scan specified, device not found";
 CHAR* msg19 = "LanceOpenAdapter failed";
 CHAR* msg20 = "Device at specified IO base address not found";
 CHAR* msg21 = " Device not found";
-CHAR* msg22 = "22: PnP scan specified, device not found";
-CHAR* msg23 = "23: VESA scan specified, device not found";
 #endif
 
 #ifdef GERMAN
 CHAR* msg1 = "NdisRegisterMac erfolgreich";
-CHAR* msg2 = "BusScan = ";
 CHAR* msg3 = "led0 = ";
 CHAR* msg4 = "led1 = ";
 CHAR* msg5 = "led2 = ";
@@ -146,8 +142,6 @@ CHAR* msg18 = "PCI-Abtastung angegeben, Ger„t nicht gefunden";
 CHAR* msg19 = "Fehler LanceOpenAdapter";
 CHAR* msg20 = " Ger„t mit der angegeben I/O-Basisadresse nicht gefunden";
 CHAR* msg21 = " Ger„t nicht gefunden";
-CHAR* msg22 = "22: PnP-Abtastung angegeben, Ger„t nicht gefunden";
-CHAR* msg23 = "23: VESA-Abtastung angegeben, Ger„t nicht gefunden";
 #endif
 
 

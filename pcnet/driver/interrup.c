@@ -148,16 +148,12 @@ Return Value:
 
 	/* Save RAP value */
 	//NdisRawReadPortUshort(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + LANCE_RAP_PORT, &SavedRAPValue);		
-	//NdisRawWritePortUlong((((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + ASIC_IO_ADDRESS_REGISTER), ((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT); 	
-    //NdisRawReadPortUlong((((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + ASIC_IO_DATA_REGISTER), &SavedRAPValue); 
 
 	/* Disable device interrupts.	Only IENA is affected by writing 0	*/
 	LanceWriteCsr((PLANCE_ADAPTER)Adapter, LANCE_CSR0, 0);
 
 	/* Restore RAP value */	
 	//NdisRawWritePortUshort(((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + LANCE_RAP_PORT, SavedRAPValue);
-	//NdisRawWritePortUlong((((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + ASIC_IO_ADDRESS_REGISTER), ((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT); 	
-    //NdisRawWritePortUlong((((PLANCE_ADAPTER)Adapter)->MappedIoBaseAddress + ASIC_IO_DATA_REGISTER), SavedRAPValue); 
 
 	#if DBG
 		if (LanceDbg)
@@ -226,8 +222,6 @@ Return Value:
 	/* Save RAP value */
 	////NdisRawReadPortUshort(Adapter->MappedIoBaseAddress + LANCE_RAP_PORT, &SavedRAPValue);
 	//****This is not used in the Phoenix code
-	//NdisRawWritePortUlong((Adapter->MappedIoBaseAddress + ASIC_IO_ADDRESS_REGISTER), (Adapter->MappedIoBaseAddress + ASIC_IO_OFFSET + LANCE_DWIO_RAP_PORT)); 	
-    //NdisRawReadPortUlong((Adapter->MappedIoBaseAddress + ASIC_IO_DATA_REGISTER), &SavedRAPValue);   
 
 	/* Read CSR0 value	*/
 	LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
