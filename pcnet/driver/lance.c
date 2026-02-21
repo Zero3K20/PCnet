@@ -1164,7 +1164,7 @@ Return Value:
 --*/
 
 {
-	UCHAR i;
+	UINT i;
 	NDIS_ERROR_CODE ErrorCode;
 	NDIS_STATUS Status;
 	ULONG HardwareDetailsStatus;
