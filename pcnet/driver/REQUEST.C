@@ -387,7 +387,6 @@ Return Value:
 
             default:
 
-               ASSERT(FALSE);
                Status = NDIS_STATUS_NOT_SUPPORTED;
                break;
 
@@ -428,7 +427,6 @@ Return Value:
                break;
             default:
 
-               ASSERT(FALSE);
                Status = NDIS_STATUS_NOT_SUPPORTED;
                break;
          }
@@ -457,7 +455,6 @@ Return Value:
 
             default:
 
-               ASSERT(FALSE);
                Status = NDIS_STATUS_NOT_SUPPORTED;
                break;
 
@@ -513,7 +510,6 @@ Return Value:
                break;
             default:
 
-               ASSERT(FALSE);
                Status = NDIS_STATUS_NOT_SUPPORTED;
                break;
 
@@ -548,7 +544,6 @@ Return Value:
 
       default:
 
-         ASSERT(FALSE);
          Status = NDIS_STATUS_NOT_SUPPORTED;
          break;
    }
