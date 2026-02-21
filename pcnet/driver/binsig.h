@@ -43,7 +43,7 @@
  * 
  *    Rev 1.56   30 Sep 1997 15:15:20   steiger
  * Changed version to 1.01.005
- * Changed all instances of PCNTN4M to PCNTN3M when appropriate
+ * Changed all instances of PCNTN4M to PCNTN5M when appropriate
  * 
  *    Rev 1.55   02 Sep 1997 14:06:20   steiger
  * Changed version to 1.01.004.
@@ -129,11 +129,11 @@ DRIVERINFO_TYPE DRIVERINFO =
    0,
    0,
 #ifdef _FAILOVER
-	"PCNTN4PS.SYS",
+	"PCNTN5PS.SYS",
 #elif defined(NDIS50_MINIPORT)
-   "PCNTN4M.SYS",
+   "PCNTN5M.SYS",
 #else
-   "PCNTN3M.SYS",
+   "PCNTN5M.SYS",
 #endif
    "5.00.001",
    "12-13-2022",

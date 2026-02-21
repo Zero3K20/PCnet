@@ -418,7 +418,7 @@ Return Value:
 	//
 	// Driver name
 	//
-	NDIS_STRING MacName = NDIS_STRING_CONST("PCNTN4M");
+	NDIS_STRING MacName = NDIS_STRING_CONST("PCNTN5M");
 
 #if DBG
 	if (LanceDbg)

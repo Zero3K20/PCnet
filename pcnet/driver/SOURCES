@@ -1,5 +1,5 @@
 USE_PDB=1
-TARGETNAME=PCNTN4M
+TARGETNAME=PCNTN5M
 TARGETPATH=obj
 TARGETTYPE=DRIVER
 
@@ -14,7 +14,7 @@ SOURCES=lance.c \
         send.c \
         request.c \
         alloc.c \
-        Pcntn3.rc \
+        Pcntn5.rc \
         
         
 RELATIVE_DEPTH=..\..

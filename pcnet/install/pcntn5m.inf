@@ -1,4 +1,4 @@
-; pcntn4m.inf
+; pcntn5m.inf
 ; Installation file for the IBM 10/100 Ethernet MCA Adapter (San Remo)
 ; Supports Windows 2000, Windows XP, Windows Server 2003, Windows 7, and later.
 ;
@@ -22,33 +22,33 @@ DriverVer   = 02/14/2024,5.0.0.0
 
 ; Windows 2000 (NT 5.0) uses the plain .NT section.
 [IBM.NT]
-%PCNTN4M.DeviceDesc% = PCNTN4M.ndi, Root\PCNTN4M
-%PCNTN4M.DeviceDesc% = PCNTN4M.ndi, *PCNTN4M
+%PCNTN5M.DeviceDesc% = PCNTN5M.ndi, Root\PCNTN5M
+%PCNTN5M.DeviceDesc% = PCNTN5M.ndi, *PCNTN5M
 ; PCI\VEN_1022 = AMD
-%PCNTN4M_PCI0.DeviceDesc% = PCNTN4M_PCI.ndi, PCI\VEN_1022&DEV_2000  ; Am79C970A PCnet-PCI II
-%PCNTN4M_PCI1.DeviceDesc% = PCNTN4M_PCI.ndi, PCI\VEN_1022&DEV_2001  ; Am79C971 PCnet-FAST
-%PCNTN4M_PCI3.DeviceDesc% = PCNTN4M_PCI.ndi, PCI\VEN_1022&DEV_2625  ; Am79C973 PCnet-FAST III
+%PCNTN5M_PCI0.DeviceDesc% = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2000  ; Am79C970A PCnet-PCI II
+%PCNTN5M_PCI1.DeviceDesc% = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2001  ; Am79C971 PCnet-FAST
+%PCNTN5M_PCI3.DeviceDesc% = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2625  ; Am79C973 PCnet-FAST III
 
 ; Windows XP, Server 2003, Vista, 7 (x86) use the .NTx86 section.
 [IBM.NTx86]
-%PCNTN4M.DeviceDesc% = PCNTN4M.ndi, Root\PCNTN4M
-%PCNTN4M.DeviceDesc% = PCNTN4M.ndi, *PCNTN4M
+%PCNTN5M.DeviceDesc% = PCNTN5M.ndi, Root\PCNTN5M
+%PCNTN5M.DeviceDesc% = PCNTN5M.ndi, *PCNTN5M
 ; PCI\VEN_1022 = AMD
-%PCNTN4M_PCI0.DeviceDesc% = PCNTN4M_PCI.ndi, PCI\VEN_1022&DEV_2000  ; Am79C970A PCnet-PCI II
-%PCNTN4M_PCI1.DeviceDesc% = PCNTN4M_PCI.ndi, PCI\VEN_1022&DEV_2001  ; Am79C971 PCnet-FAST
-%PCNTN4M_PCI3.DeviceDesc% = PCNTN4M_PCI.ndi, PCI\VEN_1022&DEV_2625  ; Am79C973 PCnet-FAST III
+%PCNTN5M_PCI0.DeviceDesc% = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2000  ; Am79C970A PCnet-PCI II
+%PCNTN5M_PCI1.DeviceDesc% = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2001  ; Am79C971 PCnet-FAST
+%PCNTN5M_PCI3.DeviceDesc% = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2625  ; Am79C973 PCnet-FAST III
 
-[PCNTN4M.ndi]
+[PCNTN5M.ndi]
 Characteristics = 0x4  ; NCF_PHYSICAL
 BusType         = 1    ; ISA
-AddReg          = PCNTN4M.ndi.reg
-CopyFiles       = PCNTN4M.CopyFiles
+AddReg          = PCNTN5M.ndi.reg
+CopyFiles       = PCNTN5M.CopyFiles
 
-[PCNTN4M.ndi.Services]
-AddService = PCNTN4M, 2, PCNTN4M.Service, PCNTN4M.EventLog
+[PCNTN5M.ndi.Services]
+AddService = PCNTN5M, 2, PCNTN5M.Service, PCNTN5M.EventLog
 
-[PCNTN4M.ndi.reg]
-HKR, Ndi,              Service,    0, "PCNTN4M"
+[PCNTN5M.ndi.reg]
+HKR, Ndi,              Service,    0, "PCNTN5M"
 HKR, Ndi\Interfaces,   UpperRange, 0, "ndis5"
 HKR, Ndi\Interfaces,   LowerRange, 0, "ethernet"
 
@@ -70,17 +70,17 @@ HKR, ,  Interrupt,   0x00010001, 10
 HKR, ,  DmaChannel,  0x00010001, 5
 HKR, ,  BUS_TO_SCAN, 0x00000000, "MCA"
 
-[PCNTN4M_PCI.ndi]
+[PCNTN5M_PCI.ndi]
 Characteristics = 0x4  ; NCF_PHYSICAL
 BusType         = 5    ; PCI
-AddReg          = PCNTN4M_PCI.ndi.reg
-CopyFiles       = PCNTN4M.CopyFiles
+AddReg          = PCNTN5M_PCI.ndi.reg
+CopyFiles       = PCNTN5M.CopyFiles
 
-[PCNTN4M_PCI.ndi.Services]
-AddService = PCNTN4M, 2, PCNTN4M.Service, PCNTN4M.EventLog
+[PCNTN5M_PCI.ndi.Services]
+AddService = PCNTN5M, 2, PCNTN5M.Service, PCNTN5M.EventLog
 
-[PCNTN4M_PCI.ndi.reg]
-HKR, Ndi,              Service,    0, "PCNTN4M"
+[PCNTN5M_PCI.ndi.reg]
+HKR, Ndi,              Service,    0, "PCNTN5M"
 HKR, Ndi\Interfaces,   UpperRange, 0, "ndis5"
 HKR, Ndi\Interfaces,   LowerRange, 0, "ethernet"
 HKR, Ndi, *IfType,            0x00010003, 6
@@ -89,38 +89,38 @@ HKR, Ndi, *PhysicalMediaType, 0x00010003, 0
 ; BusType=5 tells the driver this is a PCI device (direct register access, no ASIC bridge)
 HKR, ,  BusType, 0x00010001, 5
 
-[PCNTN4M.Service]
-DisplayName    = %PCNTN4M.Service.DispName%
+[PCNTN5M.Service]
+DisplayName    = %PCNTN5M.Service.DispName%
 ServiceType    = 1  ; SERVICE_KERNEL_DRIVER
 StartType      = 3  ; SERVICE_DEMAND_START
 ErrorControl   = 1  ; SERVICE_ERROR_NORMAL
-ServiceBinary  = %12%\PCNTN4M.sys
+ServiceBinary  = %12%\PCNTN5M.sys
 LoadOrderGroup = NDIS
 
-[PCNTN4M.EventLog]
-AddReg = PCNTN4M.EventLog.reg
+[PCNTN5M.EventLog]
+AddReg = PCNTN5M.EventLog.reg
 
-[PCNTN4M.EventLog.reg]
+[PCNTN5M.EventLog.reg]
 HKR,, EventMessageFile, 0x00020000, "%%SystemRoot%%\System32\netevent.dll"
 HKR,, TypesSupported,   0x00010001, 7
 
-[PCNTN4M.CopyFiles]
-PCNTN4M.sys
+[PCNTN5M.CopyFiles]
+PCNTN5M.sys
 
 [DestinationDirs]
-PCNTN4M.CopyFiles = 12   ; %windir%\system32\drivers
+PCNTN5M.CopyFiles = 12   ; %windir%\system32\drivers
 
 [SourceDisksNames]
 1 = %DiskName%,,,""
 
 [SourceDisksFiles]
-PCNTN4M.sys = 1
+PCNTN5M.sys = 1
 
 [Strings]
 IBM                      = "IBM"
-PCNTN4M.DeviceDesc       = "IBM 10/100 Ethernet MCA Adapter (San Remo)"
-PCNTN4M.Service.DispName = "IBM 10/100 Ethernet MCA Miniport"
+PCNTN5M.DeviceDesc       = "IBM 10/100 Ethernet MCA Adapter (San Remo)"
+PCNTN5M.Service.DispName = "IBM 10/100 Ethernet MCA Miniport"
 DiskName                 = "IBM San Remo Driver Disk"
-PCNTN4M_PCI0.DeviceDesc  = "AMD PCnet-PCI II Ethernet Adapter (Am79C970A)"
-PCNTN4M_PCI1.DeviceDesc  = "AMD PCnet-FAST Ethernet Adapter (Am79C971)"
-PCNTN4M_PCI3.DeviceDesc  = "AMD PCnet-FAST III Ethernet Adapter (Am79C973)"
+PCNTN5M_PCI0.DeviceDesc  = "AMD PCnet-PCI II Ethernet Adapter (Am79C970A)"
+PCNTN5M_PCI1.DeviceDesc  = "AMD PCnet-FAST Ethernet Adapter (Am79C971)"
+PCNTN5M_PCI3.DeviceDesc  = "AMD PCnet-FAST III Ethernet Adapter (Am79C973)"

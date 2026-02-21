@@ -74,11 +74,11 @@ $Log:   V:\network\pcnet\mini3&4\src\lancesft.h_v  $
 #define LANCE_DRIVER_MINOR_VERSION 0
 
 #ifdef _FAILOVER
-	#define LANCE_DRIVER_NAME	"PCNTN4PS"
+	#define LANCE_DRIVER_NAME	"PCNTN5PS"
 #elif defined(NDIS50_MINIPORT)
-	#define LANCE_DRIVER_NAME	"PCNTN4M"
+	#define LANCE_DRIVER_NAME	"PCNTN5M"
 #else
-	#define LANCE_DRIVER_NAME	"PCNTN3M"
+	#define LANCE_DRIVER_NAME	"PCNTN5M"
 #endif
 
 /* We use STATIC to define procedures that will be static in the */

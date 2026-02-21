@@ -13,7 +13,7 @@ Sunnyvale, CA 94088.
 
 Module Name:
 
-    pcntn3.rc
+    pcntn5.rc
 
 Abstract:
 
@@ -82,11 +82,11 @@ Revision History:
 #endif
 
 #ifdef _FAILOVER
- #define VER_INTERNALNAME_STR        "PCNTN4PS.SYS"
+ #define VER_INTERNALNAME_STR        "PCNTN5PS.SYS"
 #elif defined(NDIS50_MINIPORT)
- #define VER_INTERNALNAME_STR        "PCNTN4M.SYS"
+ #define VER_INTERNALNAME_STR        "PCNTN5M.SYS"
 #else
- #define VER_INTERNALNAME_STR        "PCNTN3M.SYS"
+ #define VER_INTERNALNAME_STR        "PCNTN5M.SYS"
 #endif
 
 #define VER_ORIGINALFILENAME_STR    VER_INTERNALNAME_STR
@@ -139,7 +139,7 @@ BEGIN
 END
 
 //#ifdef _FAILOVER
-//#include "pcntn4m.rc"
+//#include "pcntn5m.rc"
 //#endif
 
 //#endif
