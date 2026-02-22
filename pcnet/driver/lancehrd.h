@@ -209,7 +209,9 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 #define LANCE_CSR3_ACON    0x0002
 #define LANCE_CSR3_BSWP    0x0004
 #define LANCE_CSR3_DXSUFLO 0x0040
-#define LANCE_CSR3_LAPPEN  0x0020  /* Lookahead Packet Processing Enable: begin DMA while frame still arriving */
+#define LANCE_CSR3_LAPPEN  0x0020  /* Lookahead Packet Processing Enable (Am79C971+). NOT set:
+                                    * VirtualBox presents the full frame immediately (no real wire),
+                                    * so the split-DMA state machine stalls the descriptor ring. */
 #define LANCE_CSR3_TINTM   0x0200
 #define LANCE_CSR3_TINTM_IDONM 0x0300
 #define LANCE_CSR3_IDONM   0x0100
@@ -236,8 +238,11 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 
 /* define csr80 bits (DMA Transfer Counter and FIFO Watermark Control): */
 #define LANCE_CSR80           80
-#define LANCE_CSR80_XMTSP_64  0x0800  /* TX start point: begin TX when 64 bytes in FIFO (XMTSP=10b) */
-#define LANCE_CSR80_RCVFW_64  0x2000  /* RX FIFO watermark: fetch when 64 bytes received (RCVFW=10b) */
+#define LANCE_CSR80_XMTSP_64  0x0800  /* TX start point: begin TX when 64 bytes in FIFO (XMTSP bits 11:10 = 10b) */
+/* NOTE: RCVFW (receive FIFO watermark) is at CSR80 bits 9:8 on Am79C971/972/973.
+ * RCVFW_64 = 0x0200 (bits 9:8 = 10b). Not set here: LAPPEN lookahead mode
+ * and RCVFW > 16 bytes cause VirtualBox's PCnet emulator to stall the
+ * descriptor ring after processing some frames. */
 
 /* define csr125 IPG value: */
 #define LANCE_CSR125_IPG  0x5c00

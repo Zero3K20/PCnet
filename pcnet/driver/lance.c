@@ -2353,9 +2353,9 @@ NOTES:
 		break;
 
 	default:
-		/* TX start point (64 bytes) + RX FIFO watermark (64 bytes) via CSR80 */
+		/* TX start point: begin TX when 64 bytes in FIFO (CSR80 XMTSP=10b) */
 		LanceReadCsr(Adapter, LANCE_CSR80, &Data);
-		Data |= (LANCE_CSR80_XMTSP_64 | LANCE_CSR80_RCVFW_64);
+		Data |= LANCE_CSR80_XMTSP_64;
 		LanceWriteCsr(Adapter, LANCE_CSR80, Data);
 		break;
 	}
@@ -2370,7 +2370,7 @@ NOTES:
 		break;
 
 	default:
-		Data |= (LANCE_CSR3_IDONM | LANCE_CSR3_MERRM | LANCE_CSR3_DXSUFLO | LANCE_CSR3_BABLM | LANCE_CSR3_LAPPEN);
+		Data |= (LANCE_CSR3_IDONM | LANCE_CSR3_MERRM | LANCE_CSR3_DXSUFLO | LANCE_CSR3_BABLM);
 		break;
 	}
 
