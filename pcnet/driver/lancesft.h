@@ -555,25 +555,24 @@ typedef struct _LANCE_ADAPTER
 
 	/* Memory allocated */
 	ULONG AllocatedNonCachedMemorySize;
-	ULONG AllocatedCachedMemorySize;
 
-	/* Physical address of shared memory. */
+	/* Physical address of shared memory (non-cached: descriptor rings + init block). */
 	NDIS_PHYSICAL_ADDRESS SharedMemoryPa;
 
-	/* Virtual address of shared memory. */
+	/* Virtual address of shared memory (non-cached). */
 	PVOID SharedMemoryVa;
 
-	/* Physical address of shared memory. */
-	NDIS_PHYSICAL_ADDRESS SharedCachedMemoryPa;
-
-	/* Virtual address of shared memory. */
-	PVOID SharedCachedMemoryVa;
-
-	/* The pointer to transmit buffers. */
-	PCHAR TransmitBufferPointer;
-
-	/* The physical address of the TransmitBufferPointer */
-	NDIS_PHYSICAL_ADDRESS TransmitBufferPointerPhysical;
+	/*
+	 * Chunk-based cached DMA buffer allocation.
+	 * TX and RX data buffers are allocated in ALLOC_CHUNK_BUFFERS-sized chunks
+	 * to avoid requiring a single large physically-contiguous allocation.
+	 * Use TX_BUFFER_VA/TX_BUFFER_PA and RX_BUFFER_VA/RX_BUFFER_PA macros
+	 * (defined in lancehrd.h) to address individual buffers.
+	 */
+	PVOID                 TxChunkVa[TX_CHUNK_COUNT];
+	NDIS_PHYSICAL_ADDRESS TxChunkPa[TX_CHUNK_COUNT];
+	PVOID                 RxChunkVa[RX_CHUNK_COUNT];
+	NDIS_PHYSICAL_ADDRESS RxChunkPa[RX_CHUNK_COUNT];
 
 	/* Pointer to the transmit descriptor ring (this is */
 	/* allocated to be of size NumberOfTransmitDescriptors). */
@@ -584,23 +583,17 @@ typedef struct _LANCE_ADAPTER
 
 	/* Index to the next available transmit descriptor */
 	/* in the descriptor ring. */
-	UCHAR NextTransmitDescriptorIndex;
+	USHORT NextTransmitDescriptorIndex;
 
 	/* Index to the last processed transmit descriptor */
 	/* in the descriptor ring. */
-	UCHAR TailTransmitDescriptorIndex;
+	USHORT TailTransmitDescriptorIndex;
 
 	/* Transmit packet type array */
 	UCHAR TransmitPacketType[TRANSMIT_BUFFERS];
 
 	/* Transmit packet length */
 	UINT TransmitPacketLength[TRANSMIT_BUFFERS];
-
-	/* The pointer to receive buffers */
-	PCHAR ReceiveBufferPointer;
-
-	/* The physical address of the ReceiveBufferPointer */
-	NDIS_PHYSICAL_ADDRESS ReceiveBufferPointerPhysical;
 
 	/* Pointer to the receive descriptor ring */
 	/* (this is allocated to be of size NumberOfReceiveDescriptors). */

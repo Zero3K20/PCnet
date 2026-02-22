@@ -2191,23 +2191,19 @@ NOTES:
 --*/
 {
 
-	UCHAR	i;
+	UINT	i;
 	ULONG	Data;
 
 	PLANCE_TRANSMIT_DESCRIPTOR		TransmitDescriptorRing;
 	PLANCE_TRANSMIT_DESCRIPTOR_HI	TransmitDescriptorRingHi;
-	NDIS_PHYSICAL_ADDRESS			TransmitBufferPointerPhysical;
 	PLANCE_RECEIVE_DESCRIPTOR		ReceiveDescriptorRing;
 	PLANCE_RECEIVE_DESCRIPTOR_HI	ReceiveDescriptorRingHi;
-	NDIS_PHYSICAL_ADDRESS			ReceiveBufferPointerPhysical;
 
 #if DBG
 	if (LanceDbg)
 		DbgPrint("==>LanceSetupRegistersAndInit\n");
 #endif
 	/* Initialize the Rx/Tx descriptor ring structures	*/
-	TransmitBufferPointerPhysical = Adapter->TransmitBufferPointerPhysical;
-	ReceiveBufferPointerPhysical = Adapter->ReceiveBufferPointerPhysical;
 
 	/* Set the Software Style to 32 Bits (PCNET-PCI).	*/
 
@@ -2236,16 +2232,13 @@ NOTES:
 			// Initialize transmit buffer pointer
 			//
 			TransmitDescriptorRingHi->LanceBufferPhysicalLow =
-				LANCE_GET_LOW_PART_ADDRESS(NdisGetPhysicalAddressLow(
-					TransmitBufferPointerPhysical) + (i * TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_LOW_PART_ADDRESS(TX_BUFFER_PA(Adapter, i));
 
 			TransmitDescriptorRingHi->LanceBufferPhysicalHighL =
-				LANCE_GET_HIGH_PART_ADDRESS(NdisGetPhysicalAddressLow(
-					TransmitBufferPointerPhysical) + (i * TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_HIGH_PART_ADDRESS(TX_BUFFER_PA(Adapter, i));
 
 			TransmitDescriptorRingHi->LanceBufferPhysicalHighH =
-				LANCE_GET_HIGH_PART_ADDRESS_H(NdisGetPhysicalAddressLow(
-					TransmitBufferPointerPhysical) + (i * TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_HIGH_PART_ADDRESS_H(TX_BUFFER_PA(Adapter, i));
 
 			TransmitDescriptorRingHi->ByteCount = (SHORT)0xF000;
 			TransmitDescriptorRingHi->TransmitError = 0;
@@ -2261,16 +2254,13 @@ NOTES:
 		for (i = 0; i < RECEIVE_BUFFERS; i++, ReceiveDescriptorRingHi++)
 		{
 			ReceiveDescriptorRingHi->LanceBufferPhysicalLow =
-				LANCE_GET_LOW_PART_ADDRESS(NdisGetPhysicalAddressLow(
-					ReceiveBufferPointerPhysical) + (i * RECEIVE_BUFFER_SIZE));
+				LANCE_GET_LOW_PART_ADDRESS(RX_BUFFER_PA(Adapter, i));
 
 			ReceiveDescriptorRingHi->LanceBufferPhysicalHighL =
-				LANCE_GET_HIGH_PART_ADDRESS(NdisGetPhysicalAddressLow(
-					ReceiveBufferPointerPhysical) + (i * RECEIVE_BUFFER_SIZE));
+				LANCE_GET_HIGH_PART_ADDRESS(RX_BUFFER_PA(Adapter, i));
 
 			ReceiveDescriptorRingHi->LanceBufferPhysicalHighH =
-				LANCE_GET_HIGH_PART_ADDRESS_H(NdisGetPhysicalAddressLow(
-					ReceiveBufferPointerPhysical) + (i * RECEIVE_BUFFER_SIZE));
+				LANCE_GET_HIGH_PART_ADDRESS_H(RX_BUFFER_PA(Adapter, i));
 
 			/* Make Lance the owner of the descriptor	*/
 			ReceiveDescriptorRingHi->LanceRMDFlags = OWN;
@@ -3490,7 +3480,6 @@ LanceInitRxPacketPool(
 	PNDIS_PACKET 					Packet;
 	PNDIS_BUFFER					Buffer;
 	PNDIS_PACKET_OOB_DATA			OobyDoobyData;
-	PUCHAR							BufferVirtAddr;
 	int								n;
 
 #if DBG
@@ -3539,9 +3528,6 @@ LanceInitRxPacketPool(
 	/* buffers allocated for the Lance chip. There is one buffer per 		*/
 	/* descriptor.															*/
 
-	/* Get the virtual address of the start of rx buffer space */
-	BufferVirtAddr = Adapter->ReceiveBufferPointer;
-
 	for (n = 0; n < RECEIVE_BUFFERS; n++)
 	{
 		/* First, allocate an NDIS packet descriptor*/
@@ -3550,7 +3536,7 @@ LanceInitRxPacketPool(
 		/* If that worked, allocate an NDIS buffer descriptor */
 		if (Status == NDIS_STATUS_SUCCESS)
 		{
-			NdisAllocateBuffer(&Status, &Buffer, BufPoolHandle, BufferVirtAddr, RECEIVE_BUFFER_SIZE);
+			NdisAllocateBuffer(&Status, &Buffer, BufPoolHandle, RX_BUFFER_VA(Adapter, n), RECEIVE_BUFFER_SIZE);
 		}
 
 		/* If either packet or buffer allocation calls fail, we'll end up here */
@@ -3586,7 +3572,6 @@ LanceInitRxPacketPool(
 		NdisChainBufferAtFront(Packet, Buffer);
 		Adapter->pNdisPacket[n] = Packet;
 		Adapter->pNdisBuffer[n] = Buffer;
-		BufferVirtAddr += RECEIVE_BUFFER_SIZE;
 	}
 	Adapter->NdisPktPoolHandle = PktPoolHandle;
 	Adapter->NdisBufPoolHandle = BufPoolHandle;

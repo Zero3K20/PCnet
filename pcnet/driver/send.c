@@ -110,7 +110,7 @@ Return Value:
 	PCHAR							CurrentDestination;
 	INT								TotalDataMoved = 0;
 	ULONG							Csr0Value;
-	UCHAR							CurrentDescriptorIndex;
+	USHORT							CurrentDescriptorIndex;
 	UCHAR							TransmitStatus;
 	USHORT 						TransmitError;
 	PNDIS_PACKET_OOB_DATA			OobData;
@@ -238,8 +238,7 @@ Return Value:
 		/* Send packet on the wire */
 		/* Get the current xmit data buffer address */
 
-		CurrentDestination = Adapter->TransmitBufferPointer +
-						(CurrentDescriptorIndex * TRANSMIT_BUFFER_SIZE);
+		CurrentDestination = TX_BUFFER_VA(Adapter, CurrentDescriptorIndex);
 
 	//
 	// As we do not update the statistics in the ISR, we need to
@@ -401,19 +400,13 @@ Return Value:
 		if (Adapter->SwStyle == SW_STYLE_2)
 		{
 			CurrentDescriptorHi->LanceBufferPhysicalLow =
-			LANCE_GET_LOW_PART_ADDRESS(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_LOW_PART_ADDRESS(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 			CurrentDescriptorHi->LanceBufferPhysicalHighL =
-			LANCE_GET_HIGH_PART_ADDRESS(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_HIGH_PART_ADDRESS(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 			CurrentDescriptorHi->LanceBufferPhysicalHighH =
-			LANCE_GET_HIGH_PART_ADDRESS_H(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_HIGH_PART_ADDRESS_H(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 			/* APAD_XMT is set in CSR4: hardware pads short frames automatically */
 			CurrentDescriptorHi->ByteCount = -TotalDataMoved;
@@ -453,14 +446,10 @@ Return Value:
 			}
 
 			CurrentDescriptor->LanceBufferPhysicalLow =
-			LANCE_GET_LOW_PART_ADDRESS(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex * TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_LOW_PART_ADDRESS(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 			CurrentDescriptor->LanceBufferPhysicalHighL =
-			LANCE_GET_HIGH_PART_ADDRESS(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex * TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_HIGH_PART_ADDRESS(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 			OobData->Status = NDIS_STATUS_SUCCESS;
 			/* Now change the ownership of the packet to Lance. */
@@ -732,8 +721,7 @@ Return Value:
 	//
 	// Get the current xmit data buffer address
 	//
-	CurrentDestination = Adapter->TransmitBufferPointer +
-					(CurrentDescriptorIndex * TRANSMIT_BUFFER_SIZE);
+	CurrentDestination = TX_BUFFER_VA(Adapter, CurrentDescriptorIndex);
 
 	//
 	// As we do not update the statistics in the ISR, we need to
@@ -886,19 +874,13 @@ Return Value:
 	{
 
 		CurrentDescriptorHi->LanceBufferPhysicalLow =
-		LANCE_GET_LOW_PART_ADDRESS(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE));
+			LANCE_GET_LOW_PART_ADDRESS(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 		CurrentDescriptorHi->LanceBufferPhysicalHighL =
-		LANCE_GET_HIGH_PART_ADDRESS(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE));
+			LANCE_GET_HIGH_PART_ADDRESS(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 		CurrentDescriptorHi->LanceBufferPhysicalHighH =
-		LANCE_GET_HIGH_PART_ADDRESS_H(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE));
+			LANCE_GET_HIGH_PART_ADDRESS_H(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 		/* APAD_XMT is set in CSR4: hardware pads short frames automatically */
 		CurrentDescriptorHi->ByteCount = -TotalDataMoved;
@@ -938,14 +920,10 @@ Return Value:
 		}
 
 		CurrentDescriptor->LanceBufferPhysicalLow =
-		LANCE_GET_LOW_PART_ADDRESS(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex * TRANSMIT_BUFFER_SIZE));
+			LANCE_GET_LOW_PART_ADDRESS(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 		CurrentDescriptor->LanceBufferPhysicalHighL =
-		LANCE_GET_HIGH_PART_ADDRESS(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex * TRANSMIT_BUFFER_SIZE));
+			LANCE_GET_HIGH_PART_ADDRESS(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 		//
 		// Now change the ownership of the packet to Lance.
@@ -1059,7 +1037,7 @@ Return Value:
 	PCHAR							CurrentDestination;
 	INT								TotalDataMoved = 0;
 	ULONG							Csr0Value;
-	UCHAR							CurrentDescriptorIndex;
+	USHORT							CurrentDescriptorIndex;
 	UCHAR							TransmitStatus;
 	USHORT 						TransmitError;
 	PNDIS_PACKET_OOB_DATA			OobData;
@@ -1159,8 +1137,7 @@ Return Value:
 		/* Send packet on the wire */
 		/* Get the current xmit data buffer address */
 
-		CurrentDestination = Adapter->TransmitBufferPointer +
-						(CurrentDescriptorIndex * TRANSMIT_BUFFER_SIZE);
+		CurrentDestination = TX_BUFFER_VA(Adapter, CurrentDescriptorIndex);
 
 	//
 	// As we do not update the statistics in the ISR, we need to
@@ -1312,19 +1289,13 @@ Return Value:
 		if (Adapter->SwStyle == SW_STYLE_2)
 		{
 			CurrentDescriptorHi->LanceBufferPhysicalLow =
-			LANCE_GET_LOW_PART_ADDRESS(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_LOW_PART_ADDRESS(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 			CurrentDescriptorHi->LanceBufferPhysicalHighL =
-			LANCE_GET_HIGH_PART_ADDRESS(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_HIGH_PART_ADDRESS(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 			CurrentDescriptorHi->LanceBufferPhysicalHighH =
-			LANCE_GET_HIGH_PART_ADDRESS_H(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex	* TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_HIGH_PART_ADDRESS_H(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 			/* APAD_XMT is set in CSR4: hardware pads short frames automatically */
 			CurrentDescriptorHi->ByteCount = -TotalDataMoved;
@@ -1364,14 +1335,10 @@ Return Value:
 			}
 
 			CurrentDescriptor->LanceBufferPhysicalLow =
-			LANCE_GET_LOW_PART_ADDRESS(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex * TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_LOW_PART_ADDRESS(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 			CurrentDescriptor->LanceBufferPhysicalHighL =
-			LANCE_GET_HIGH_PART_ADDRESS(
-			NdisGetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical) +
-			(CurrentDescriptorIndex * TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_HIGH_PART_ADDRESS(TX_BUFFER_PA(Adapter, CurrentDescriptorIndex));
 
 			OobData->Status = NDIS_STATUS_SUCCESS;
 			/* Now change the ownership of the packet to Lance. */

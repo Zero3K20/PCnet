@@ -540,8 +540,7 @@ Return Value:
 #ifndef NDIS50_MINIPORT
 			LookAheadSize = PacketSize;
 #endif
-			PacketVa = (PVOID)(Adapter->ReceiveBufferPointer +
-							(CurrentDescriptorIndex * RECEIVE_BUFFER_SIZE));
+			PacketVa = (PVOID)RX_BUFFER_VA(Adapter, CurrentDescriptorIndex);
 
 			Adapter->DmiSpecific[DMI_RX_BYTES] += (COUNTER64) PacketSize;
 

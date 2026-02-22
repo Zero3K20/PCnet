@@ -294,7 +294,7 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 /* Default transmit settings	*/
 
 /* Default # of buffers	*/
-#define TRANSMIT_BUFFERS         64
+#define TRANSMIT_BUFFERS         256
 
 
 #ifdef NDIS50_MINIPORT
@@ -314,12 +314,50 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 //
 // Default # of buffers
 //
-#define RECEIVE_BUFFERS          64
+#define RECEIVE_BUFFERS          256
 
 //
 // Default size of receive buffer
 //
 #define RECEIVE_BUFFER_SIZE     1536
+
+/*
+ * Chunk-based DMA allocation.
+ *
+ * A single NdisMAllocateSharedMemory call for all 256 TX + 256 RX buffers
+ * (~768 KB physically contiguous) fails on a live Windows 7 system, causing
+ * pool corruption BSODs.  Allocate in ALLOC_CHUNK_BUFFERS-buffer chunks
+ * (32 × 1536 = 48 KB each) which are always satisfiable.
+ *
+ * Each PCnet descriptor stores its own buffer physical address, so buffers
+ * need not be globally contiguous across descriptor slots.
+ *
+ * TRANSMIT_BUFFERS and RECEIVE_BUFFERS must be exact multiples of
+ * ALLOC_CHUNK_BUFFERS.
+ */
+#define ALLOC_CHUNK_BUFFERS  32
+#define TX_CHUNK_COUNT       (TRANSMIT_BUFFERS / ALLOC_CHUNK_BUFFERS)
+#define RX_CHUNK_COUNT       (RECEIVE_BUFFERS  / ALLOC_CHUNK_BUFFERS)
+#define ALLOC_CHUNK_TX_SIZE  (ALLOC_CHUNK_BUFFERS * TRANSMIT_BUFFER_SIZE)
+#define ALLOC_CHUNK_RX_SIZE  (ALLOC_CHUNK_BUFFERS * RECEIVE_BUFFER_SIZE)
+
+/* Per-buffer virtual address (for CPU access) */
+#define TX_BUFFER_VA(Adapter, idx) \
+    ((PCHAR)(Adapter)->TxChunkVa[(idx) / ALLOC_CHUNK_BUFFERS] + \
+     (ULONG)((idx) % ALLOC_CHUNK_BUFFERS) * TRANSMIT_BUFFER_SIZE)
+
+#define RX_BUFFER_VA(Adapter, idx) \
+    ((PCHAR)(Adapter)->RxChunkVa[(idx) / ALLOC_CHUNK_BUFFERS] + \
+     (ULONG)((idx) % ALLOC_CHUNK_BUFFERS) * RECEIVE_BUFFER_SIZE)
+
+/* Per-buffer physical address (for PCnet descriptor programming) */
+#define TX_BUFFER_PA(Adapter, idx) \
+    (NdisGetPhysicalAddressLow((Adapter)->TxChunkPa[(idx) / ALLOC_CHUNK_BUFFERS]) + \
+     (ULONG)((idx) % ALLOC_CHUNK_BUFFERS) * TRANSMIT_BUFFER_SIZE)
+
+#define RX_BUFFER_PA(Adapter, idx) \
+    (NdisGetPhysicalAddressLow((Adapter)->RxChunkPa[(idx) / ALLOC_CHUNK_BUFFERS]) + \
+     (ULONG)((idx) % ALLOC_CHUNK_BUFFERS) * RECEIVE_BUFFER_SIZE)
 
 //
 // Minimum packet size for Ethernet.
