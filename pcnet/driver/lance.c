@@ -152,6 +152,7 @@ INT LanceExtPhyDbg = 0;
 INT LanceEventDbg = 0;
 INT LanceRxDbg = 0;
 INT LanceFilterDbg = 0;
+INT LanceQueryDbg = 0;
 INT LanceBreak = 0;
 #define STATIC
 
@@ -1164,7 +1165,7 @@ Return Value:
 --*/
 
 {
-	UCHAR i;
+	UINT i;
 	NDIS_ERROR_CODE ErrorCode;
 	NDIS_STATUS Status;
 	ULONG HardwareDetailsStatus;
@@ -1254,6 +1255,11 @@ Return Value:
 
 	//
 	// Register the adapter with NDIS.
+	// Use NdisMSetAttributes with BusMaster=TRUE (PCI bus-master DMA).
+	// NdisMSetAttributesEx with IGNORE_PACKET_TIMEOUT or IGNORE_REQUEST_TIMEOUT
+	// must not be used: on Windows 7, the NDIS5 compatibility shim frees its
+	// internal OID/packet wrapper pool allocations when a timeout fires even
+	// with those flags set, causing pool corruption (0x19/0xC5 BSODs).
 	//
 	NdisMSetAttributes(
 		Adapter->LanceMiniportHandle,
@@ -1362,8 +1368,13 @@ Return Value:
 					Adapter->ReceiveDescriptorRingPhysical));
 
 		//
-		// Set number of receiving descriptors in RLEN field
+		// Set number of receiving descriptors in RLEN field.
+		// Zero first: LanceSetupRegistersAndInit may be called multiple times
+		// (e.g. from LanceChangeAddress -> LanceInit). Without zeroing, the
+		// += loop accumulates across calls and overflows the UCHAR field,
+		// corrupting RLEN to 0 (= 1 descriptor) on the second call.
 		//
+		InitializationBlockHi->RLen = 0;
 		i = RECEIVE_BUFFERS;
 		while (i >>= 1)
 			InitializationBlockHi->RLen
@@ -1388,8 +1399,10 @@ Return Value:
 				NdisGetPhysicalAddressLow(Adapter->TransmitDescriptorRingPhysical));
 
 		//
-		// Set number of transmit descriptors in TLEN field
+		// Set number of transmit descriptors in TLEN field.
+		// Zero first for the same reason as RLen above.
 		//
+		InitializationBlockHi->TLen = 0;
 		i = TRANSMIT_BUFFERS;
 		while (i >>= 1)
 			InitializationBlockHi->TLen
@@ -2186,23 +2199,19 @@ NOTES:
 --*/
 {
 
-	UCHAR	i;
+	UINT	i;
 	ULONG	Data;
 
 	PLANCE_TRANSMIT_DESCRIPTOR		TransmitDescriptorRing;
 	PLANCE_TRANSMIT_DESCRIPTOR_HI	TransmitDescriptorRingHi;
-	NDIS_PHYSICAL_ADDRESS			TransmitBufferPointerPhysical;
 	PLANCE_RECEIVE_DESCRIPTOR		ReceiveDescriptorRing;
 	PLANCE_RECEIVE_DESCRIPTOR_HI	ReceiveDescriptorRingHi;
-	NDIS_PHYSICAL_ADDRESS			ReceiveBufferPointerPhysical;
 
 #if DBG
 	if (LanceDbg)
 		DbgPrint("==>LanceSetupRegistersAndInit\n");
 #endif
 	/* Initialize the Rx/Tx descriptor ring structures	*/
-	TransmitBufferPointerPhysical = Adapter->TransmitBufferPointerPhysical;
-	ReceiveBufferPointerPhysical = Adapter->ReceiveBufferPointerPhysical;
 
 	/* Set the Software Style to 32 Bits (PCNET-PCI).	*/
 
@@ -2231,16 +2240,13 @@ NOTES:
 			// Initialize transmit buffer pointer
 			//
 			TransmitDescriptorRingHi->LanceBufferPhysicalLow =
-				LANCE_GET_LOW_PART_ADDRESS(NdisGetPhysicalAddressLow(
-					TransmitBufferPointerPhysical) + (i * TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_LOW_PART_ADDRESS(TX_BUFFER_PA(Adapter, i));
 
 			TransmitDescriptorRingHi->LanceBufferPhysicalHighL =
-				LANCE_GET_HIGH_PART_ADDRESS(NdisGetPhysicalAddressLow(
-					TransmitBufferPointerPhysical) + (i * TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_HIGH_PART_ADDRESS(TX_BUFFER_PA(Adapter, i));
 
 			TransmitDescriptorRingHi->LanceBufferPhysicalHighH =
-				LANCE_GET_HIGH_PART_ADDRESS_H(NdisGetPhysicalAddressLow(
-					TransmitBufferPointerPhysical) + (i * TRANSMIT_BUFFER_SIZE));
+				LANCE_GET_HIGH_PART_ADDRESS_H(TX_BUFFER_PA(Adapter, i));
 
 			TransmitDescriptorRingHi->ByteCount = (SHORT)0xF000;
 			TransmitDescriptorRingHi->TransmitError = 0;
@@ -2256,16 +2262,13 @@ NOTES:
 		for (i = 0; i < RECEIVE_BUFFERS; i++, ReceiveDescriptorRingHi++)
 		{
 			ReceiveDescriptorRingHi->LanceBufferPhysicalLow =
-				LANCE_GET_LOW_PART_ADDRESS(NdisGetPhysicalAddressLow(
-					ReceiveBufferPointerPhysical) + (i * RECEIVE_BUFFER_SIZE));
+				LANCE_GET_LOW_PART_ADDRESS(RX_BUFFER_PA(Adapter, i));
 
 			ReceiveDescriptorRingHi->LanceBufferPhysicalHighL =
-				LANCE_GET_HIGH_PART_ADDRESS(NdisGetPhysicalAddressLow(
-					ReceiveBufferPointerPhysical) + (i * RECEIVE_BUFFER_SIZE));
+				LANCE_GET_HIGH_PART_ADDRESS(RX_BUFFER_PA(Adapter, i));
 
 			ReceiveDescriptorRingHi->LanceBufferPhysicalHighH =
-				LANCE_GET_HIGH_PART_ADDRESS_H(NdisGetPhysicalAddressLow(
-					ReceiveBufferPointerPhysical) + (i * RECEIVE_BUFFER_SIZE));
+				LANCE_GET_HIGH_PART_ADDRESS_H(RX_BUFFER_PA(Adapter, i));
 
 			/* Make Lance the owner of the descriptor	*/
 			ReceiveDescriptorRingHi->LanceRMDFlags = OWN;
@@ -2316,7 +2319,10 @@ NOTES:
 	/* Global setting for csr4 register	*/
 	LanceReadCsr(Adapter, LANCE_CSR4, &Data);
 
-	Data |= (LANCE_CSR4_AUTOPADTRANSMIT | LANCE_CSR4_DPOLL | 0x0004);
+	/* DPOLL intentionally NOT set: VirtualBox auto-polls TX ring after each
+	 * received frame (pcnetPollRxTx after pcnetReceiveNoSync) when DPOLL=0,
+	 * transmitting queued ACKs without a driver TDMD kick. */
+	Data |= (LANCE_CSR4_AUTOPADTRANSMIT | LANCE_CSR4_TXSTRTM);
 
 	LanceWriteCsr(Adapter, LANCE_CSR4, Data);
 
@@ -2329,11 +2335,13 @@ NOTES:
 	default:
 		/* write dma burst and bus control register bcr18	*/
 		LanceReadBcr(Adapter, LANCE_BCR18, &Data);
-		Data |= (LANCE_BCR18_BREADE | LANCE_BCR18_BWRITE);
+		Data |= (LANCE_BCR18_BREADE | LANCE_BCR18_BWRITE | LANCE_BCR18_LINBC);
 		LanceWriteBcr(Adapter, LANCE_BCR18, Data);
 		LanceReadCsr(Adapter, LANCE_CSR4, &Data);
 		Data |= LANCE_CSR4_DMAPLUS;
 		LanceWriteCsr(Adapter, LANCE_CSR4, Data);
+		/* Write Bus Activity Timer to CSR82 */
+		LanceWriteCsr(Adapter, LANCE_CSR82, Adapter->BusTimer);
 		break;
 	}
 
@@ -2346,10 +2354,10 @@ NOTES:
 		break;
 
 	default:
-		/* Transmit Start Point setting(csr80)	*/
-		LanceReadCsr(Adapter, 80, &Data);
-		Data |= 0x0800;
-		LanceWriteCsr(Adapter, 80, Data);
+		/* TX start point: begin TX when 64 bytes in FIFO (CSR80 XMTSP=10b) */
+		LanceReadCsr(Adapter, LANCE_CSR80, &Data);
+		Data |= LANCE_CSR80_XMTSP_64;
+		LanceWriteCsr(Adapter, LANCE_CSR80, Data);
 		break;
 	}
 
@@ -2369,6 +2377,12 @@ NOTES:
 
 
 	LanceWriteCsr(Adapter, LANCE_CSR3, Data);
+
+	/* NOTE: LANCE_CSR5_TOKINTD (CSR5 bit 15) must NOT be set.
+	 * It prevents LANCE_CSR0_TINT from firing on successful TX completions.
+	 * XmitComplete() is only triggered by TINT; without it, TX descriptors
+	 * are never freed, the TX ring fills after 256 packets, all subsequent
+	 * sends return NDIS_STATUS_RESOURCES, and browsing times out. */
 
 	if (FullReset)
 	{
@@ -3129,12 +3143,26 @@ LanceGetActiveMediaInfo(
 	}
 	else
 	{
-		/* Read duplex mode from internal phy (10Mbps) */
-		Adapter->LineSpeed = 10;
+		/* No external PHY detected. PCnet-FAST III is a 100 Mbps capable  */
+		/* chip; without an external PHY it uses its on-chip 100 Mbps      */
+		/* transceiver (e.g. in virtual environments such as VirtualBox    */
+		/* that do not emulate MII registers). Report 100 Mbps so the      */
+		/* host TCP/IP stack uses an appropriate receive window size.       */
+		Adapter->LineSpeed = 100;
 		/* Determine if the internal PHY is in Full Duplex mode */
 		LanceReadBcr(Adapter, LANCE_FDC_REG, &Adapter->FullDuplex);
 		Adapter->FullDuplex &= LANCE_FDC_FDEN;  /* Non-zero (TRUE) if full duplex */
+	#if DBG
+		if (LanceExtPhyDbg || LanceDbg)
+			DbgPrint("LanceGetActiveMediaInfo: no external PHY; on-chip 100 Mbps, FullDuplex=%d\n",
+			         Adapter->FullDuplex);
+	#endif
 	}
+#if DBG
+	if (LanceExtPhyDbg || LanceDbg)
+		DbgPrint("LanceGetActiveMediaInfo: LineSpeed=%d Mbps FullDuplex=%d\n",
+		         Adapter->LineSpeed, Adapter->FullDuplex);
+#endif
 
 }
 
@@ -3469,7 +3497,6 @@ LanceInitRxPacketPool(
 	PNDIS_PACKET 					Packet;
 	PNDIS_BUFFER					Buffer;
 	PNDIS_PACKET_OOB_DATA			OobyDoobyData;
-	PUCHAR							BufferVirtAddr;
 	int								n;
 
 #if DBG
@@ -3518,9 +3545,6 @@ LanceInitRxPacketPool(
 	/* buffers allocated for the Lance chip. There is one buffer per 		*/
 	/* descriptor.															*/
 
-	/* Get the virtual address of the start of rx buffer space */
-	BufferVirtAddr = Adapter->ReceiveBufferPointer;
-
 	for (n = 0; n < RECEIVE_BUFFERS; n++)
 	{
 		/* First, allocate an NDIS packet descriptor*/
@@ -3529,7 +3553,7 @@ LanceInitRxPacketPool(
 		/* If that worked, allocate an NDIS buffer descriptor */
 		if (Status == NDIS_STATUS_SUCCESS)
 		{
-			NdisAllocateBuffer(&Status, &Buffer, BufPoolHandle, BufferVirtAddr, RECEIVE_BUFFER_SIZE);
+			NdisAllocateBuffer(&Status, &Buffer, BufPoolHandle, RX_BUFFER_VA(Adapter, n), RECEIVE_BUFFER_SIZE);
 		}
 
 		/* If either packet or buffer allocation calls fail, we'll end up here */
@@ -3565,7 +3589,6 @@ LanceInitRxPacketPool(
 		NdisChainBufferAtFront(Packet, Buffer);
 		Adapter->pNdisPacket[n] = Packet;
 		Adapter->pNdisBuffer[n] = Buffer;
-		BufferVirtAddr += RECEIVE_BUFFER_SIZE;
 	}
 	Adapter->NdisPktPoolHandle = PktPoolHandle;
 	Adapter->NdisBufPoolHandle = BufPoolHandle;

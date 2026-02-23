@@ -71,6 +71,7 @@ Return Value:
     ULONG Length;
     UINT  pTempVa, pTempPa;
 	UINT  maxMapReg;
+	UINT  chunk;
 
    #if DBG
       if (LanceDbg)    
@@ -84,19 +85,12 @@ Return Value:
 	maxMapReg = (maxMapReg<TRANSMIT_BUFFERS)?maxMapReg:TRANSMIT_BUFFERS;
 
    //
-   // allocate shared memory in one big chunk
-   //
-   //
    // Memory Allocation needed for the 32-bit PCI device.
    //
    Adapter->AllocatedNonCachedMemorySize = 
 	     sizeof(LANCE_TRANSMIT_DESCRIPTOR_HI)*TRANSMIT_BUFFERS+
 	     sizeof(LANCE_RECEIVE_DESCRIPTOR_HI)*RECEIVE_BUFFERS + 
 	     sizeof(LANCE_INIT_BLOCK_HI) + 0x40;
-
-   Adapter->AllocatedCachedMemorySize = 
-	     TRANSMIT_BUFFER_SIZE*TRANSMIT_BUFFERS+
-	     RECEIVE_BUFFER_SIZE*RECEIVE_BUFFERS+0x50;
   
    // Allocate map registers.  This function has to be called
    // before calling NdisMAllocateSharedMemory
@@ -128,32 +122,69 @@ Return Value:
    if (Adapter->SharedMemoryVa == NULL)
       return FALSE;
 
-   //
-   // Allocate physically contiguous cached memory
-   //
-   NdisMAllocateSharedMemory(
-	     Adapter->LanceMiniportHandle,
-	     (ULONG)Adapter->AllocatedCachedMemorySize,
-	     TRUE, 
-	     (PVOID *)&(Adapter->SharedCachedMemoryVa),
-	     &(Adapter->SharedCachedMemoryPa)
-	     );
+   NdisZeroMemory(Adapter->SharedMemoryVa, Adapter->AllocatedNonCachedMemorySize);
 
-   if (Adapter->SharedCachedMemoryVa == NULL)
-      return FALSE;
-   
    //
-   // Zero out allocated memory
+   // Allocate cached DMA buffers in chunks.
+   // Each chunk (ALLOC_CHUNK_BUFFERS * BUFFER_SIZE ~ 48 KB) is reliably
+   // satisfiable as physically contiguous memory on any Windows version.
+   // Individual buffer addresses are computed via TX/RX_BUFFER_VA/PA macros.
    //
-   NdisZeroMemory(
-      Adapter->SharedMemoryVa,
-      Adapter->AllocatedNonCachedMemorySize
-      );
+   for (chunk = 0; chunk < TX_CHUNK_COUNT; chunk++)
+   {
+      Adapter->TxChunkVa[chunk] = NULL;
+      NdisMAllocateSharedMemory(
+         Adapter->LanceMiniportHandle,
+         (ULONG)ALLOC_CHUNK_TX_SIZE,
+         TRUE,
+         &Adapter->TxChunkVa[chunk],
+         &Adapter->TxChunkPa[chunk]
+         );
+      if (Adapter->TxChunkVa[chunk] == NULL)
+      {
+   #if DBG
+         DbgPrint("LanceAllocateAdapterMemory: TX chunk %u alloc FAILED (size=%u)\n",
+                  chunk, ALLOC_CHUNK_TX_SIZE);
+   #endif
+         return FALSE;
+      }
+      NdisZeroMemory(Adapter->TxChunkVa[chunk], ALLOC_CHUNK_TX_SIZE);
+   #if DBG
+      if (LanceDbg)
+         DbgPrint("LanceAllocateAdapterMemory: TX chunk %u VA=%p PA=%08lx size=%u\n",
+                  chunk, Adapter->TxChunkVa[chunk],
+                  NdisGetPhysicalAddressLow(Adapter->TxChunkPa[chunk]),
+                  ALLOC_CHUNK_TX_SIZE);
+   #endif
+   }
 
-   NdisZeroMemory(
-      Adapter->SharedCachedMemoryVa,
-      Adapter->AllocatedCachedMemorySize
-      );
+   for (chunk = 0; chunk < RX_CHUNK_COUNT; chunk++)
+   {
+      Adapter->RxChunkVa[chunk] = NULL;
+      NdisMAllocateSharedMemory(
+         Adapter->LanceMiniportHandle,
+         (ULONG)ALLOC_CHUNK_RX_SIZE,
+         TRUE,
+         &Adapter->RxChunkVa[chunk],
+         &Adapter->RxChunkPa[chunk]
+         );
+      if (Adapter->RxChunkVa[chunk] == NULL)
+      {
+   #if DBG
+         DbgPrint("LanceAllocateAdapterMemory: RX chunk %u alloc FAILED (size=%u)\n",
+                  chunk, ALLOC_CHUNK_RX_SIZE);
+   #endif
+         return FALSE;
+      }
+      NdisZeroMemory(Adapter->RxChunkVa[chunk], ALLOC_CHUNK_RX_SIZE);
+   #if DBG
+      if (LanceDbg)
+         DbgPrint("LanceAllocateAdapterMemory: RX chunk %u VA=%p PA=%08lx size=%u\n",
+                  chunk, Adapter->RxChunkVa[chunk],
+                  NdisGetPhysicalAddressLow(Adapter->RxChunkPa[chunk]),
+                  ALLOC_CHUNK_RX_SIZE);
+   #endif
+   }
 
    //
    // Make start memory address segment aligned 
@@ -206,41 +237,6 @@ Return Value:
 	 DbgPrint("Receive descriptor ring: V = %lx, P = %lx\n", pTempVa, pTempPa);
    #endif    
    
-   Length = sizeof(LANCE_RECEIVE_DESCRIPTOR_HI)*RECEIVE_BUFFERS;
-
-   //
-   // Make start memory address segment aligned
-   //
-   pTempVa = ((ULONG)Adapter->SharedCachedMemoryVa + 0x3f) & 0xffffffc0;
-   pTempPa = (NdisGetPhysicalAddressLow(Adapter->SharedCachedMemoryPa) + 0x3f ) & 0xffffffc0;
-
-   //
-   // Set the transmit buffer pointers
-   //
-   Adapter->TransmitBufferPointer = (PCHAR)pTempVa;
-   NdisSetPhysicalAddressLow(Adapter->TransmitBufferPointerPhysical, pTempPa);
-
-   #if DBG
-      if (LanceDbg)
-	 DbgPrint("Transmit buffer: V = %lx, P = %lx\n", pTempVa, pTempPa);
-   #endif    
-   
-   Length = TRANSMIT_BUFFER_SIZE*TRANSMIT_BUFFERS;
-
-   pTempVa += Length;
-   pTempPa += Length;
-   
-   //
-   // Set receive buffer pointers
-   //
-   Adapter->ReceiveBufferPointer = (PCHAR) pTempVa;
-   NdisSetPhysicalAddressLow(Adapter->ReceiveBufferPointerPhysical, pTempPa);
-
-   #if DBG
-      if (LanceDbg)    
-	 DbgPrint("Receive buffer: V = %lx, P = %lx\n", pTempVa, pTempPa);
-   #endif    
-   
    #if DBG
       if (LanceDbg)    
 	 DbgPrint("<==LanceAllocateAdapterMemory\n");
@@ -282,6 +278,8 @@ Return Value:
 --*/
 
 {
+   UINT chunk;
+
    #if DBG
      if (LanceDbg)    
 		DbgPrint("==>LanceDeleteAdapterMemory\n");
@@ -292,7 +290,7 @@ Return Value:
    if (Adapter->SharedMemoryVa) {
 
       //
-      // Free shared memory
+      // Free non-cached shared memory (descriptor rings + init block)
       //
       NdisMFreeSharedMemory(
 	    Adapter->LanceMiniportHandle,
@@ -302,13 +300,21 @@ Return Value:
 	    Adapter->SharedMemoryPa
 	    );
 
-      NdisMFreeSharedMemory(
-	    Adapter->LanceMiniportHandle,
-	    Adapter->AllocatedCachedMemorySize,
-		 TRUE, 
-	    Adapter->SharedCachedMemoryVa,
-	    Adapter->SharedCachedMemoryPa
-	    );
+      /* Free TX and RX cached DMA buffer chunks */
+      for (chunk = 0; chunk < TX_CHUNK_COUNT; chunk++)
+      {
+         if (Adapter->TxChunkVa[chunk])
+            NdisMFreeSharedMemory(Adapter->LanceMiniportHandle,
+               ALLOC_CHUNK_TX_SIZE, TRUE,
+               Adapter->TxChunkVa[chunk], Adapter->TxChunkPa[chunk]);
+      }
+      for (chunk = 0; chunk < RX_CHUNK_COUNT; chunk++)
+      {
+         if (Adapter->RxChunkVa[chunk])
+            NdisMFreeSharedMemory(Adapter->LanceMiniportHandle,
+               ALLOC_CHUNK_RX_SIZE, TRUE,
+               Adapter->RxChunkVa[chunk], Adapter->RxChunkPa[chunk]);
+      }
 
       //
       // Free map register

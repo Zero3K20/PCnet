@@ -227,7 +227,7 @@ Return Value:
                            };
 
    #ifdef DBG
-      if (LanceDbg)
+      if (LanceQueryDbg)
          DbgPrint("==>LanceQueryInformation\n");
    #endif
 
@@ -257,11 +257,20 @@ Return Value:
 
             case OID_GEN_MAC_OPTIONS:
 
+#ifdef NDIS50_MINIPORT
+               /* NDIS5: no lookahead buffer (NdisMIndicateReceivePacket is used),
+                * so COPY_LOOKAHEAD_DATA is irrelevant; omit RECEIVE_SERIALIZED so
+                * NDIS6 compat layer can pipeline RX with TX for better throughput. */
+               GenericUlong = (ULONG)(NDIS_MAC_OPTION_TRANSFERS_NOT_PEND |
+                                      NDIS_MAC_OPTION_NO_LOOPBACK
+                                      );
+#else
                GenericUlong = (ULONG)(NDIS_MAC_OPTION_TRANSFERS_NOT_PEND |
                                      NDIS_MAC_OPTION_RECEIVE_SERIALIZED |
                                      NDIS_MAC_OPTION_COPY_LOOKAHEAD_DATA |
                                      NDIS_MAC_OPTION_NO_LOOPBACK
                                      );
+#endif
 
                break;
 
@@ -324,9 +333,14 @@ Return Value:
 #endif
 
             case OID_GEN_LINK_SPEED:
-					if (Adapter->DeviceType == PCNET_PCI3)
+					if (Adapter->DeviceType != LANCE)
 						LanceGetActiveMediaInfo (Adapter);
 					GenericUlong = Adapter->LineSpeed * 10000; // in 100bps units
+				#if DBG
+					if (LanceDbg || LanceExtPhyDbg)
+						DbgPrint("OID_GEN_LINK_SPEED: LineSpeed=%d Mbps -> %lu (100bps units)\n",
+						         Adapter->LineSpeed, GenericUlong);
+				#endif
                break;
 
             case OID_GEN_TRANSMIT_BUFFER_SPACE:
@@ -575,7 +589,7 @@ Return Value:
          *BytesWritten = SourceBufferLength;
 
          #if DBG
-            if (LanceDbg) {
+            if (LanceQueryDbg) {
                DbgPrint("LanceRequeryInformation: Oid = %x\n", Oid);
                DbgPrint("LanceRequeryInformation: return %x\n", *(PULONG)SourceBuffer);
             }
@@ -585,7 +599,7 @@ Return Value:
    }
 
    #if DBG
-      if (LanceDbg)
+      if (LanceQueryDbg)
          DbgPrint("<==LanceQueryInformation\n");
    #endif
 
