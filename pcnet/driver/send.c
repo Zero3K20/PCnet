@@ -226,9 +226,7 @@ Return Value:
 			NumberOfPackets++;
 			if(oldNumPkts != NumberOfPackets)
 			{
-				LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
-				Csr0Value &= LANCE_CSR0_IENA;
-				LanceWriteCsr(Adapter, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
+				LanceWriteCsr(Adapter, LANCE_CSR0, LANCE_CSR0_IENA | LANCE_CSR0_TDMD);
 			}
 			while (NumberOfPackets--) {
 				NDIS_SET_PACKET_STATUS(*PacketArray,NDIS_STATUS_RESOURCES);
@@ -501,9 +499,10 @@ Return Value:
 		#endif
 	} //while
 
-		LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
-		Csr0Value &= LANCE_CSR0_IENA;
-		LanceWriteCsr(Adapter, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
+		/* IENA stays set after init; writing 0 to STOP/STRT does not stop a
+		 * running chip; interrupt-status bits 8-15 are write-1-to-clear so
+		 * writing 0 does not acknowledge any pending interrupt. No read needed. */
+		LanceWriteCsr(Adapter, LANCE_CSR0, LANCE_CSR0_IENA | LANCE_CSR0_TDMD);
 
 	#if DBG
 		if (LanceDbg)
@@ -956,9 +955,7 @@ Return Value:
 	// 
 	// Start chip now to send packet on the wire
 	//
-	LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
-	Csr0Value &= LANCE_CSR0_IENA;
-	LanceWriteCsr(Adapter, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
+	LanceWriteCsr(Adapter, LANCE_CSR0, LANCE_CSR0_IENA | LANCE_CSR0_TDMD);
 
 	//
 	// Increment the next available xit descriptor index.
@@ -1125,9 +1122,7 @@ Return Value:
 			NumberOfPackets++;
 			if(oldNumPkts != NumberOfPackets)
 			{
-				LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
-				Csr0Value &= LANCE_CSR0_IENA;
-				LanceWriteCsr(Adapter, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
+				LanceWriteCsr(Adapter, LANCE_CSR0, LANCE_CSR0_IENA | LANCE_CSR0_TDMD);
 			}
 			while (NumberOfPackets--) {
 				NDIS_SET_PACKET_STATUS(*PacketArray,NDIS_STATUS_RESOURCES);
@@ -1379,9 +1374,7 @@ Return Value:
 	} // while (NumberOfPackets --)
 
 	/* Start chip now to send packet on the wire */
-	LanceReadCsr(Adapter, LANCE_CSR0, &Csr0Value);
-	Csr0Value &= LANCE_CSR0_IENA;
-	LanceWriteCsr(Adapter, LANCE_CSR0, Csr0Value | LANCE_CSR0_TDMD);
+	LanceWriteCsr(Adapter, LANCE_CSR0, LANCE_CSR0_IENA | LANCE_CSR0_TDMD);
 
 	#if DBG
 		if (LanceDbg)

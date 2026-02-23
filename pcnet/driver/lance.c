@@ -2312,7 +2312,10 @@ NOTES:
 	/* Global setting for csr4 register	*/
 	LanceReadCsr(Adapter, LANCE_CSR4, &Data);
 
-	Data |= (LANCE_CSR4_AUTOPADTRANSMIT | LANCE_CSR4_DPOLL | LANCE_CSR4_TXSTRTM);
+	/* DPOLL intentionally NOT set: VirtualBox auto-polls TX ring after each
+	 * received frame (pcnetPollRxTx after pcnetReceiveNoSync) when DPOLL=0,
+	 * transmitting queued ACKs without a driver TDMD kick. */
+	Data |= (LANCE_CSR4_AUTOPADTRANSMIT | LANCE_CSR4_TXSTRTM);
 
 	LanceWriteCsr(Adapter, LANCE_CSR4, Data);
 

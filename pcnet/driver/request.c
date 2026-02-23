@@ -257,11 +257,20 @@ Return Value:
 
             case OID_GEN_MAC_OPTIONS:
 
+#ifdef NDIS50_MINIPORT
+               /* NDIS5: no lookahead buffer (NdisMIndicateReceivePacket is used),
+                * so COPY_LOOKAHEAD_DATA is irrelevant; omit RECEIVE_SERIALIZED so
+                * NDIS6 compat layer can pipeline RX with TX for better throughput. */
+               GenericUlong = (ULONG)(NDIS_MAC_OPTION_TRANSFERS_NOT_PEND |
+                                      NDIS_MAC_OPTION_NO_LOOPBACK
+                                      );
+#else
                GenericUlong = (ULONG)(NDIS_MAC_OPTION_TRANSFERS_NOT_PEND |
                                      NDIS_MAC_OPTION_RECEIVE_SERIALIZED |
                                      NDIS_MAC_OPTION_COPY_LOOKAHEAD_DATA |
                                      NDIS_MAC_OPTION_NO_LOOPBACK
                                      );
+#endif
 
                break;
 
