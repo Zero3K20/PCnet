@@ -1368,8 +1368,13 @@ Return Value:
 					Adapter->ReceiveDescriptorRingPhysical));
 
 		//
-		// Set number of receiving descriptors in RLEN field
+		// Set number of receiving descriptors in RLEN field.
+		// Zero first: LanceSetupRegistersAndInit may be called multiple times
+		// (e.g. from LanceChangeAddress -> LanceInit). Without zeroing, the
+		// += loop accumulates across calls and overflows the UCHAR field,
+		// corrupting RLEN to 0 (= 1 descriptor) on the second call.
 		//
+		InitializationBlockHi->RLen = 0;
 		i = RECEIVE_BUFFERS;
 		while (i >>= 1)
 			InitializationBlockHi->RLen
@@ -1394,8 +1399,10 @@ Return Value:
 				NdisGetPhysicalAddressLow(Adapter->TransmitDescriptorRingPhysical));
 
 		//
-		// Set number of transmit descriptors in TLEN field
+		// Set number of transmit descriptors in TLEN field.
+		// Zero first for the same reason as RLen above.
 		//
+		InitializationBlockHi->TLen = 0;
 		i = TRANSMIT_BUFFERS;
 		while (i >>= 1)
 			InitializationBlockHi->TLen
