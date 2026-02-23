@@ -152,6 +152,7 @@ INT LanceExtPhyDbg = 0;
 INT LanceEventDbg = 0;
 INT LanceRxDbg = 0;
 INT LanceFilterDbg = 0;
+INT LanceQueryDbg = 0;
 INT LanceBreak = 0;
 #define STATIC
 

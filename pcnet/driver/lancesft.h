@@ -108,6 +108,7 @@ $Log:   V:\network\pcnet\mini3&4\src\lancesft.h_v  $
  extern INT LanceEventDbg;
  extern INT LanceRxDbg;
  extern INT LanceFilterDbg;
+ extern INT LanceQueryDbg;
  extern INT LanceBreak;
 #endif
 

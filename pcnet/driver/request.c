@@ -227,7 +227,7 @@ Return Value:
                            };
 
    #ifdef DBG
-      if (LanceDbg)
+      if (LanceQueryDbg)
          DbgPrint("==>LanceQueryInformation\n");
    #endif
 
@@ -580,7 +580,7 @@ Return Value:
          *BytesWritten = SourceBufferLength;
 
          #if DBG
-            if (LanceDbg) {
+            if (LanceQueryDbg) {
                DbgPrint("LanceRequeryInformation: Oid = %x\n", Oid);
                DbgPrint("LanceRequeryInformation: return %x\n", *(PULONG)SourceBuffer);
             }
@@ -590,7 +590,7 @@ Return Value:
    }
 
    #if DBG
-      if (LanceDbg)
+      if (LanceQueryDbg)
          DbgPrint("<==LanceQueryInformation\n");
    #endif
 
