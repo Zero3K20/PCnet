@@ -327,6 +327,11 @@ Return Value:
 					if (Adapter->DeviceType != LANCE)
 						LanceGetActiveMediaInfo (Adapter);
 					GenericUlong = Adapter->LineSpeed * 10000; // in 100bps units
+				#if DBG
+					if (LanceDbg || LanceExtPhyDbg)
+						DbgPrint("OID_GEN_LINK_SPEED: LineSpeed=%d Mbps -> %lu (100bps units)\n",
+						         Adapter->LineSpeed, GenericUlong);
+				#endif
                break;
 
             case OID_GEN_TRANSMIT_BUFFER_SPACE:

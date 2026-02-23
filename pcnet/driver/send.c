@@ -213,7 +213,10 @@ Return Value:
 
 			#if DBG
 			if (LanceDbg || LanceSendDbg)
-				DbgPrint("no xmit descriptor available. Pkts send : %i\n",oldNumPkts - NumberOfPackets);
+				DbgPrint("LanceSendPackets: TX ring full - Next=%u Tail=%u sent=%u of %u\n",
+				         (UINT)Adapter->NextTransmitDescriptorIndex,
+				         (UINT)Adapter->TailTransmitDescriptorIndex,
+				         (UINT)(oldNumPkts - NumberOfPackets), (UINT)oldNumPkts);
 			#endif
 
 			Adapter->OpFlags &= ~RESET_PROHIBITED;

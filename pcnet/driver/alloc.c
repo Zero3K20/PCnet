@@ -141,8 +141,21 @@ Return Value:
          &Adapter->TxChunkPa[chunk]
          );
       if (Adapter->TxChunkVa[chunk] == NULL)
+      {
+   #if DBG
+         DbgPrint("LanceAllocateAdapterMemory: TX chunk %u alloc FAILED (size=%u)\n",
+                  chunk, ALLOC_CHUNK_TX_SIZE);
+   #endif
          return FALSE;
+      }
       NdisZeroMemory(Adapter->TxChunkVa[chunk], ALLOC_CHUNK_TX_SIZE);
+   #if DBG
+      if (LanceDbg)
+         DbgPrint("LanceAllocateAdapterMemory: TX chunk %u VA=%p PA=%08lx size=%u\n",
+                  chunk, Adapter->TxChunkVa[chunk],
+                  NdisGetPhysicalAddressLow(Adapter->TxChunkPa[chunk]),
+                  ALLOC_CHUNK_TX_SIZE);
+   #endif
    }
 
    for (chunk = 0; chunk < RX_CHUNK_COUNT; chunk++)
@@ -156,8 +169,21 @@ Return Value:
          &Adapter->RxChunkPa[chunk]
          );
       if (Adapter->RxChunkVa[chunk] == NULL)
+      {
+   #if DBG
+         DbgPrint("LanceAllocateAdapterMemory: RX chunk %u alloc FAILED (size=%u)\n",
+                  chunk, ALLOC_CHUNK_RX_SIZE);
+   #endif
          return FALSE;
+      }
       NdisZeroMemory(Adapter->RxChunkVa[chunk], ALLOC_CHUNK_RX_SIZE);
+   #if DBG
+      if (LanceDbg)
+         DbgPrint("LanceAllocateAdapterMemory: RX chunk %u VA=%p PA=%08lx size=%u\n",
+                  chunk, Adapter->RxChunkVa[chunk],
+                  NdisGetPhysicalAddressLow(Adapter->RxChunkPa[chunk]),
+                  ALLOC_CHUNK_RX_SIZE);
+   #endif
    }
 
    //

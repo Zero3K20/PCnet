@@ -3141,7 +3141,17 @@ LanceGetActiveMediaInfo(
 		/* Determine if the internal PHY is in Full Duplex mode */
 		LanceReadBcr(Adapter, LANCE_FDC_REG, &Adapter->FullDuplex);
 		Adapter->FullDuplex &= LANCE_FDC_FDEN;  /* Non-zero (TRUE) if full duplex */
+	#if DBG
+		if (LanceExtPhyDbg || LanceDbg)
+			DbgPrint("LanceGetActiveMediaInfo: no external PHY; on-chip 100 Mbps, FullDuplex=%d\n",
+			         Adapter->FullDuplex);
+	#endif
 	}
+#if DBG
+	if (LanceExtPhyDbg || LanceDbg)
+		DbgPrint("LanceGetActiveMediaInfo: LineSpeed=%d Mbps FullDuplex=%d\n",
+		         Adapter->LineSpeed, Adapter->FullDuplex);
+#endif
 
 }
 
