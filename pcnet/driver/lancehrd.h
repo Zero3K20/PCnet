@@ -230,7 +230,9 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 #define LANCE_CSR5_MPMODE	0x0002
 #define LANCE_CSR5_MPEN		0x0004
 #define LANCE_CSR5_MPPLBA	0x0020
-#define LANCE_CSR5_TOKINTD	0x8000  /* Transmit OK Interrupt Disable: suppress per-packet TX-OK ISR */
+#define LANCE_CSR5_TOKINTD	0x8000  /* Transmit OK Interrupt Disable — DO NOT SET.
+	 * Prevents CSR0_TINT from firing on successful TX. XmitComplete() depends
+	 * on TINT to free TX descriptors; setting this stalls the TX ring. */
 
 /* define csr15 bits: */
 #define LANCE_CSR15_DRX   0x0001

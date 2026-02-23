@@ -2367,15 +2367,11 @@ NOTES:
 
 	LanceWriteCsr(Adapter, LANCE_CSR3, Data);
 
-	/* Suppress per-packet TX-OK interrupt (CSR5 TOKINTD) on PCI devices to reduce ISR load.
-	 * TOKINTD is a PCI-specific feature (CSR5 bit 15); the original ISA LANCE chip does not
-	 * support CSR5 TOKINTD — writing it on LANCE hardware is harmless but unnecessary. */
-	if (Adapter->DeviceType != LANCE)
-	{
-		LanceReadCsr(Adapter, LANCE_CSR5, &Data);
-		Data |= LANCE_CSR5_TOKINTD;
-		LanceWriteCsr(Adapter, LANCE_CSR5, Data);
-	}
+	/* NOTE: LANCE_CSR5_TOKINTD (CSR5 bit 15) must NOT be set.
+	 * It prevents LANCE_CSR0_TINT from firing on successful TX completions.
+	 * XmitComplete() is only triggered by TINT; without it, TX descriptors
+	 * are never freed, the TX ring fills after 256 packets, all subsequent
+	 * sends return NDIS_STATUS_RESOURCES, and browsing times out. */
 
 	if (FullReset)
 	{
