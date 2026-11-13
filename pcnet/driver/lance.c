@@ -169,7 +169,7 @@ UCHAR LogPlace = 0;
 
 ULONG LED_defaults[] = { 0x00c0l, 0x0090l, 0x0088l, 0x0081l };
 #if DBG	/* Used for Mutex macro in LANCESFT.H */
-UCHAR Mutex;
+volatile LONG Mutex;
 #endif
 /* Global data structures for the miniport.	*/
 NDIS_HANDLE LanceWrapperHandle;
@@ -3703,19 +3703,20 @@ LanceShutdownHandler(
 	return;
 }
 /* Handy code for detecting reentrancy problems */
-/* NEVER use in free builds ! */
+/* NEVER use in free builds! */
 #if DBG
 UCHAR LanceMutex(USHORT Flag)
 {
-	UCHAR	OldFlag;
-	_asm
-	{
-		mov		ax, Flag
-		xchg	al, Mutex
-		mov		OldFlag, al
-	}
-	if ((Flag == LOCK) && OldFlag)
-		_asm	int 3;
-	return OldFlag;
+    UCHAR OldFlag;
+
+    OldFlag = (UCHAR)InterlockedExchange(
+        &Mutex,
+        (LONG)Flag
+    );
+
+    if ((Flag == LOCK) && OldFlag)
+        DbgBreakPoint();
+
+    return OldFlag;
 }
 #endif

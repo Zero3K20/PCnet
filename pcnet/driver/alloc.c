@@ -69,9 +69,11 @@ Return Value:
 
 {
     ULONG Length;
-    UINT  pTempVa, pTempPa;
-	UINT  maxMapReg;
-	UINT  chunk;
+    ULONG_PTR pTempVa;
+    NDIS_PHYSICAL_ADDRESS pTempPa;
+    ULONG_PTR alignmentOffset;
+    UINT maxMapReg;
+    UINT chunk;
 
    #if DBG
       if (LanceDbg)    
@@ -186,56 +188,68 @@ Return Value:
    #endif
    }
 
+
    //
-   // Make start memory address segment aligned 
+   // Align the shared memory start address.
+   // Preserve the same offset for the virtual and physical addresses.
    //
-   pTempVa = ((ULONG)Adapter->SharedMemoryVa + 0xf) & 0xfffffff0;
-   pTempPa = (NdisGetPhysicalAddressLow(Adapter->SharedMemoryPa) + 0xf ) & 0xfffffff0;
+   alignmentOffset =
+       ((ULONG_PTR)0 - (ULONG_PTR)Adapter->SharedMemoryVa) & 0x0f;
+
+   pTempVa = (ULONG_PTR)Adapter->SharedMemoryVa + alignmentOffset;
+   pTempPa.QuadPart = Adapter->SharedMemoryPa.QuadPart + alignmentOffset;
 
    //
    // Allocate the initialization block.
    //
-   Adapter->InitializationBlock = (PLANCE_INIT_BLOCK_HI) pTempVa;
-
-   NdisSetPhysicalAddressLow(Adapter->InitializationBlockPhysical, pTempPa);
+   Adapter->InitializationBlock = (PVOID)pTempVa;
+   Adapter->InitializationBlockPhysical = pTempPa;
 
    #if DBG
-      if (LanceDbg)
-	 DbgPrint("Initialization block: V = %lx, P = %lx\n", pTempVa, pTempPa);
-   #endif    
-					  
+   if (LanceDbg)
+       DbgPrint("Initialization block: V=%p P=%08lx:%08lx\n",
+           (PVOID)pTempVa,
+           NdisGetPhysicalAddressHigh(pTempPa),
+           NdisGetPhysicalAddressLow(pTempPa));
+   #endif
+
    Length = 0x20;
    pTempVa += Length;
-   pTempPa += Length;
+   pTempPa.QuadPart += Length;
 
    //
    // Allocate the transmit ring descriptors.
    //
-   Adapter->TransmitDescriptorRing = (PLANCE_TRANSMIT_DESCRIPTOR_HI)pTempVa;
-
-   NdisSetPhysicalAddressLow(Adapter->TransmitDescriptorRingPhysical, pTempPa);
+   Adapter->TransmitDescriptorRing = (PVOID)pTempVa;
+   Adapter->TransmitDescriptorRingPhysical = pTempPa;
 
    #if DBG
-      if (LanceDbg)
-	 DbgPrint("Transmit descriptors ring: V = %lx, P = %lx\n", pTempVa, pTempPa);
-   #endif    
-   
-   Length = sizeof(LANCE_TRANSMIT_DESCRIPTOR_HI)*TRANSMIT_BUFFERS;
+   if (LanceDbg)
+       DbgPrint("Transmit descriptor ring: V=%p P=%08lx:%08lx\n",
+           (PVOID)pTempVa,
+           NdisGetPhysicalAddressHigh(pTempPa),
+           NdisGetPhysicalAddressLow(pTempPa));
+   #endif
+
+   Length = sizeof(LANCE_TRANSMIT_DESCRIPTOR_HI) * TRANSMIT_BUFFERS;
 
    pTempVa += Length;
-   pTempPa += Length;
-   
+   pTempPa.QuadPart += Length;
+
    //
    // Allocate the receive ring descriptors.
    //
-   Adapter->ReceiveDescriptorRing = (PLANCE_RECEIVE_DESCRIPTOR_HI) pTempVa;
-
-   NdisSetPhysicalAddressLow(Adapter->ReceiveDescriptorRingPhysical, pTempPa);
+   Adapter->ReceiveDescriptorRing = (PVOID)pTempVa;
+   Adapter->ReceiveDescriptorRingPhysical = pTempPa;
 
    #if DBG
-      if (LanceDbg)
-	 DbgPrint("Receive descriptor ring: V = %lx, P = %lx\n", pTempVa, pTempPa);
-   #endif    
+   if (LanceDbg)
+       DbgPrint("Receive descriptor ring: V=%p P=%08lx:%08lx\n",
+           (PVOID)pTempVa,
+           NdisGetPhysicalAddressHigh(pTempPa),
+           NdisGetPhysicalAddressLow(pTempPa));
+   #endif
+    
    
    #if DBG
       if (LanceDbg)    
