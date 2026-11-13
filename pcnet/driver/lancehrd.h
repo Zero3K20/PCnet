@@ -128,6 +128,7 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 #define LANCE_BCR7_PSE        0x0080
 #define LANCE_BCR18_BREADE    0x0040
 #define LANCE_BCR18_BWRITE    0x0020
+#define LANCE_BCR18_LINBC     0x0800  /* Line burst count: 8 DWORDs (32 bytes) per DMA burst */
 
 /* define bcr2 */
 #define LANCE_BCR2				2
@@ -207,16 +208,20 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 #define LANCE_CSR3_BCON    0x0001
 #define LANCE_CSR3_ACON    0x0002
 #define LANCE_CSR3_BSWP    0x0004
+#define LANCE_CSR3_DXSUFLO 0x0040
+#define LANCE_CSR3_LAPPEN  0x0020  /* Lookahead Packet Processing Enable (Am79C971+). NOT set:
+                                    * VirtualBox presents the full frame immediately (no real wire),
+                                    * so the split-DMA state machine stalls the descriptor ring. */
 #define LANCE_CSR3_TINTM   0x0200
 #define LANCE_CSR3_TINTM_IDONM 0x0300
 #define LANCE_CSR3_IDONM   0x0100
 #define LANCE_CSR3_BABLM   0x4000
 #define LANCE_CSR3_MERRM   0x0800
-#define LANCE_CSR3_DXSUFLO 0x0040
 
 /* define csr4 bits: */
 #define LANCE_CSR4_DMAPLUS 0x4000
 #define LANCE_CSR4_AUTOPADTRANSMIT 0x0800
+#define LANCE_CSR4_TXSTRTM 0x0004  /* Mask transmit-start interrupt (from ReactOS/AMD datasheet) */
 #define LANCE_CSR4_DPOLL   0x1000
 #define LANCE_CSR4_TIMER   0x2000
 
@@ -225,10 +230,21 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 #define LANCE_CSR5_MPMODE	0x0002
 #define LANCE_CSR5_MPEN		0x0004
 #define LANCE_CSR5_MPPLBA	0x0020
+#define LANCE_CSR5_TOKINTD	0x8000  /* Transmit OK Interrupt Disable — DO NOT SET.
+	 * Prevents CSR0_TINT from firing on successful TX. XmitComplete() depends
+	 * on TINT to free TX descriptors; setting this stalls the TX ring. */
 
 /* define csr15 bits: */
 #define LANCE_CSR15_DRX   0x0001
 #define LANCE_CSR15_DTX   0x0002
+
+/* define csr80 bits (DMA Transfer Counter and FIFO Watermark Control): */
+#define LANCE_CSR80           80
+#define LANCE_CSR80_XMTSP_64  0x0800  /* TX start point: begin TX when 64 bytes in FIFO (XMTSP bits 11:10 = 10b) */
+/* NOTE: RCVFW (receive FIFO watermark) is at CSR80 bits 9:8 on Am79C971/972/973.
+ * RCVFW_64 = 0x0200 (bits 9:8 = 10b). Not set here: LAPPEN lookahead mode
+ * and RCVFW > 16 bytes cause VirtualBox's PCnet emulator to stall the
+ * descriptor ring after processing some frames. */
 
 /* define csr125 IPG value: */
 #define LANCE_CSR125_IPG  0x5c00
@@ -280,7 +296,7 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 /* Default transmit settings	*/
 
 /* Default # of buffers	*/
-#define TRANSMIT_BUFFERS         32
+#define TRANSMIT_BUFFERS         256
 
 
 #ifdef NDIS50_MINIPORT
@@ -300,12 +316,50 @@ $Log:   V:\network\pcnet\mini3&4\src\lancehrd.h_v  $
 //
 // Default # of buffers
 //
-#define RECEIVE_BUFFERS          32
+#define RECEIVE_BUFFERS          256
 
 //
 // Default size of receive buffer
 //
 #define RECEIVE_BUFFER_SIZE     1536
+
+/*
+ * Chunk-based DMA allocation.
+ *
+ * A single NdisMAllocateSharedMemory call for all 256 TX + 256 RX buffers
+ * (~768 KB physically contiguous) fails on a live Windows 7 system, causing
+ * pool corruption BSODs.  Allocate in ALLOC_CHUNK_BUFFERS-buffer chunks
+ * (32 × 1536 = 48 KB each) which are always satisfiable.
+ *
+ * Each PCnet descriptor stores its own buffer physical address, so buffers
+ * need not be globally contiguous across descriptor slots.
+ *
+ * TRANSMIT_BUFFERS and RECEIVE_BUFFERS must be exact multiples of
+ * ALLOC_CHUNK_BUFFERS.
+ */
+#define ALLOC_CHUNK_BUFFERS  32
+#define TX_CHUNK_COUNT       (TRANSMIT_BUFFERS / ALLOC_CHUNK_BUFFERS)
+#define RX_CHUNK_COUNT       (RECEIVE_BUFFERS  / ALLOC_CHUNK_BUFFERS)
+#define ALLOC_CHUNK_TX_SIZE  (ALLOC_CHUNK_BUFFERS * TRANSMIT_BUFFER_SIZE)
+#define ALLOC_CHUNK_RX_SIZE  (ALLOC_CHUNK_BUFFERS * RECEIVE_BUFFER_SIZE)
+
+/* Per-buffer virtual address (for CPU access) */
+#define TX_BUFFER_VA(Adapter, idx) \
+    ((PCHAR)(Adapter)->TxChunkVa[(idx) / ALLOC_CHUNK_BUFFERS] + \
+     (ULONG)((idx) % ALLOC_CHUNK_BUFFERS) * TRANSMIT_BUFFER_SIZE)
+
+#define RX_BUFFER_VA(Adapter, idx) \
+    ((PCHAR)(Adapter)->RxChunkVa[(idx) / ALLOC_CHUNK_BUFFERS] + \
+     (ULONG)((idx) % ALLOC_CHUNK_BUFFERS) * RECEIVE_BUFFER_SIZE)
+
+/* Per-buffer physical address (for PCnet descriptor programming) */
+#define TX_BUFFER_PA(Adapter, idx) \
+    (NdisGetPhysicalAddressLow((Adapter)->TxChunkPa[(idx) / ALLOC_CHUNK_BUFFERS]) + \
+     (ULONG)((idx) % ALLOC_CHUNK_BUFFERS) * TRANSMIT_BUFFER_SIZE)
+
+#define RX_BUFFER_PA(Adapter, idx) \
+    (NdisGetPhysicalAddressLow((Adapter)->RxChunkPa[(idx) / ALLOC_CHUNK_BUFFERS]) + \
+     (ULONG)((idx) % ALLOC_CHUNK_BUFFERS) * RECEIVE_BUFFER_SIZE)
 
 //
 // Minimum packet size for Ethernet.

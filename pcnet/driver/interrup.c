@@ -540,8 +540,7 @@ Return Value:
 #ifndef NDIS50_MINIPORT
 			LookAheadSize = PacketSize;
 #endif
-			PacketVa = (PVOID)(Adapter->ReceiveBufferPointer +
-							(CurrentDescriptorIndex * RECEIVE_BUFFER_SIZE));
+			PacketVa = (PVOID)RX_BUFFER_VA(Adapter, CurrentDescriptorIndex);
 
 			Adapter->DmiSpecific[DMI_RX_BYTES] += (COUNTER64) PacketSize;
 
@@ -813,6 +812,9 @@ SkipIndication:
 			++Adapter->DmiSpecific[DMI_CSR0_BABL];
 			/* Fatal error!	Transmit time-out	*/
 			LOG(BABL)
+		#if DBG
+			DbgPrint("PCnet ISR: BABL - transmit babble (overlong frame), CSR0=%04lx\n", Csr0Value);
+		#endif
 		}
 
 		if (Csr0Value & LANCE_CSR0_MERR)
@@ -820,6 +822,9 @@ SkipIndication:
 			++Adapter->DmiSpecific[DMI_CSR0_MERR];
 			/* Fatal error! No DACK assert for bus master DMA	*/
 			LOG(ERR)
+		#if DBG
+			DbgPrint("PCnet ISR: MERR - DMA bus error (no DACK), CSR0=%04lx\n", Csr0Value);
+		#endif
 		}
 
 		/* Collision error	*/
@@ -827,6 +832,10 @@ SkipIndication:
 		{
 			++Adapter->MediaOptional[MO_TRANSMIT_HEARTBEAT_FAILURE];
 			LOG(HEART)
+		#if DBG
+			if (LanceDbg || LanceSendDbg)
+				DbgPrint("PCnet ISR: CERR - heartbeat collision error, CSR0=%04lx\n", Csr0Value);
+		#endif
 		}
 
 		/* Receive descriptor is not available for coming frame	*/
@@ -834,6 +843,10 @@ SkipIndication:
 		{
 			++Adapter->GeneralMandatory[GM_RECEIVE_NO_BUFFER];
 			LOG(MISSED)
+		#if DBG
+			DbgPrint("PCnet ISR: MISS - receive descriptor unavailable (RX ring overflow), CSR0=%04lx NextReceive=%u\n",
+			         Csr0Value, (UINT)Adapter->NextReceiveDescriptorIndex);
+		#endif
 		}
 	}
 
@@ -919,7 +932,10 @@ USHORT	dbgCount=0;
 	
 #if DBG	
 	if (LanceDbg)
-		DbgPrint("==>XmitComplete : %i\n",Adapter->RedundantMode);
+		DbgPrint("==>XmitComplete : RedundantMode=%i Tail=%u Next=%u\n",
+		         Adapter->RedundantMode,
+		         (UINT)Adapter->TailTransmitDescriptorIndex,
+		         (UINT)Adapter->NextTransmitDescriptorIndex);
 #endif
 
 	while (Adapter->TailTransmitDescriptorIndex != Adapter->NextTransmitDescriptorIndex)
